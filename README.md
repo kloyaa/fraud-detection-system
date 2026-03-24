@@ -11,13 +11,26 @@ Production-grade fraud detection and risk scoring platform for transaction proce
 
 ## Quick Start
 
-### Prerequisites
-- Python 3.12+
-- Docker & Docker Compose
-- Node.js 18+
-- PostgreSQL 16, Redis 7 (or Docker services)
+### Option 1: Docker (Recommended)
 
-### Setup
+```bash
+# Clone and enter repo
+git clone <repo_url>
+cd fraud-detection-system
+
+# Start entire stack (PostgreSQL, Redis, FastAPI app with auto-reload)
+docker-compose up -d
+
+# Verify services
+docker-compose ps
+
+# Access app at http://localhost:8000
+# View logs: docker-compose logs -f app
+```
+
+**Full Docker guide:** [DOCKER_SETUP.md](DOCKER_SETUP.md)
+
+### Option 2: Local Development (No Docker)
 
 ```bash
 # Clone and enter repo
@@ -29,11 +42,11 @@ python -m venv venv
 source venv/bin/activate  # or: venv\Scripts\activate (Windows)
 pip install -r requirements.txt
 
-# Database setup
+# Start services manually
+docker-compose up -d postgres redis  # Just DB & cache
 alembic upgrade head
 
-# Start services (development)
-docker-compose up -d
+# Start FastAPI dev server
 make dev  # or: python -m uvicorn app.main:app --reload
 ```
 

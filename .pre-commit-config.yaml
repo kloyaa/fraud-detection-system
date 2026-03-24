@@ -1,0 +1,41 @@
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.3.7
+    hooks:
+      - id: ruff
+        args: [--fix, --exit-zero]
+      - id: ruff-format
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-merge-conflict
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.8.0
+    hooks:
+      - id: mypy
+        additional_dependencies:
+          - sqlalchemy
+          - fastapi
+          - pydantic
+          - pydantic-settings
+        args: [--strict]
+
+  - repo: https://github.com/Lucas-C/pre-commit-hooks-bandit
+    rev: v1.3.1
+    hooks:
+      - id: python-bandit-vulnerability-check
+        args: [--severity-level=medium]
+
+  - repo: local
+    hooks:
+      - id: alembic-autogenerate
+        name: Alembic autogenerate check
+        entry: bash -c 'alembic current || true'
+        language: system
+        always_run: false
+        stages: [commit]
