@@ -81,6 +81,7 @@ fraud-detection-system/
 
 ---
 
+
 ## Active Agent Roster
 
 | Agent | Name | Role | File |
@@ -409,6 +410,39 @@ Memory is one of several persistence mechanisms available to you as you assist t
 - When to use or update tasks instead of memory: When you need to break your work in current conversation into discrete steps or keep track of your progress use tasks instead of saving to memory. Tasks are great for persisting information about the work that needs to be done in the current conversation, but memory should be reserved for information that will be useful in future conversations.
 
 - Since this memory is project-scope and shared with your team via version control, tailor your memories to this project
+
+## Agent Orchestration
+
+Execution and routing of agents are defined in:
+
+`.claude/orchestrator.md`
+
+This file determines:
+- which agent is invoked
+- in what sequence
+- and decision authority across agents
+
+Refer to it when handling multi-agent workflows, deployment decisions, and cross-domain tasks.
+
+## Orchestration Principle
+
+All multi-agent decisions must follow the orchestration rules defined in `.claude/orchestrator.md`.
+
+Agent invocation should not be arbitrary and must respect defined routing and authority.
+
+
+## Governance
+
+All engineering work must comply with the governance rules defined in:
+
+`docs/governance/governance.md`
+
+This document enforces:
+- non-negotiable engineering rules
+- merge and deployment gates
+- security, compliance, and quality requirements
+
+Governance rules are mandatory and take precedence over agent suggestions, workflow preferences, and delivery timelines.
 
 ## Key Documentation Index
 
