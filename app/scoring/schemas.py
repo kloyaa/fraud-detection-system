@@ -1,6 +1,7 @@
 """Scoring API request/response schemas using Pydantic v2."""
 
 from decimal import Decimal
+from typing import Optional
 from uuid import UUID
 
 from pydantic import BaseModel, Field
@@ -9,55 +10,83 @@ from pydantic import BaseModel, Field
 class RiskScoreRequest(BaseModel):
     """POST /v1/risk/score request body.
 
-    Requires Idempotency-Key header for idempotency (stored in Redis).
+    Requires Idempotency-Key header for deduplication.
+    All fields are validated at the schema level.
     """
 
-    transaction_id: str = Field(..., min_length=1, max_length=255)
-    """Unique transaction identifier from upstream system."""
-
-    customer_id: str = Field(..., min_length=1, max_length=255)
-    """Customer identifier for risk assessment."""
-
-    amount_cents: int = Field(..., gt=0)
-    """Transaction amount in cents (e.g., 10000 = $100.00)."""
-
-    merchant_id: str = Field(..., min_length=1, max_length=255)
-    """Merchant identifier."""
-
-    currency: str = Field(default="USD", pattern="^[A-Z]{3}$")
-    """ISO 4217 currency code."""
+    transaction_id: str = Field(..., min_length=1, max_length=255, description="Unique transaction ID")
+    customer_id: str = Field(..., min_length=1, max_length=255, description="Customer ID")
+    amount_cents: int = Field(..., gt=0, description="Amount in cents")
+    currency: str = Field(default="USD", pattern="^[A-Z]{3}$", description="ISO 4217 currency code")
+    merchant_id: str = Field(..., min_length=1, max_length=255, description="Merchant ID")
+    merchant_category: Optional[str] = Field(None, max_length=255, description="ISO 18245 merchant category code")
+    merchant_country: Optional[str] = Field(None, pattern="^[A-Z]{2}$", description="ISO 3166-1 country code")
 
     model_config = {"title": "RiskScoreRequest"}
 
 
 class RiskScoreResponse(BaseModel):
-    """POST /v1/risk/score success response."""
+    """POST /v1/risk/score success response (2xx).
 
-    request_id: UUID
-    """Request tracking ID from idempotency key."""
+    Contains risk assessment and recommendation for downstream systems.
+    All decisions are based on rule engine evaluation.
+    """
 
-    risk_score: Decimal = Field(..., ge=0, le=1, decimal_places=4)
-    """Risk score from [0.0000, 1.0000] where 1.0 = highest fraud risk."""
+    request_id: str = Field(..., description="Request tracking ID from Idempotency-Key")
+    transaction_id: str = Field(..., description="Transaction ID (echo)")
+    
+    # Risk assessment
+    risk_score: float = Field(..., ge=0.0, le=1.0, description="Risk score [0.0, 1.0]")
+    risk_level: str = Field(..., pattern="^(LOW|MEDIUM|HIGH|CRITICAL)$", description="Risk classification")
+    decision: str = Field(..., pattern="^(APPROVE|REVIEW|DECLINE)$", description="Scoring decision")
+    
+    # Reason codes for FCRA adverse action
+    reason_codes: list[str] = Field(
+        default_factory=list,
+        description="FCRA-compliant reason codes for decline/review decisions"
+    )
+    
+    # Execution metadata
+    processing_ms: int = Field(..., ge=0, description="Processing time in milliseconds")
+    engine_version: str = Field(default="1.0.0", description="Scoring engine version")
 
-    risk_tier: str = Field(..., pattern="^(LOW|MEDIUM|HIGH|CRITICAL)$")
-    """Risk classification tier."""
-
-    decision: str = Field(..., pattern="^(APPROVE|REVIEW|DECLINE)$")
-    """Initial scoring decision (may be overridden by rules engine)."""
-
-    model_config = {"title": "RiskScoreResponse"}
+    model_config = {
+        "title": "RiskScoreResponse",
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "request_id": "550e8400-e29b-41d4-a716-446655440000",
+                    "transaction_id": "txn_abc123",
+                    "risk_score": 0.25,
+                    "risk_level": "LOW",
+                    "decision": "APPROVE",
+                    "reason_codes": [],
+                    "processing_ms": 45,
+                    "engine_version": "1.0.0",
+                }
+            ]
+        }
+    }
 
 
 class ErrorResponse(BaseModel):
-    """Error response (422 validation, 400 business logic, 500 unexpected)."""
+    """Error response for all failure scenarios (4xx, 5xx)."""
 
-    error_code: str
-    """Machine-readable error type (e.g., IDEMPOTENCY_KEY_CONFLICT)."""
+    error_code: str = Field(..., description="Machine-readable error type (e.g., VALIDATION_ERROR, INTERNAL_SERVER_ERROR)")
+    message: str = Field(..., description="Human-readable error message")
+    request_id: Optional[str] = Field(None, description="Request ID if available (from request state)")
+    details: Optional[dict] = Field(None, description="Additional error context")
 
-    message: str
-    """Human-readable error message."""
-
-    request_id: str
-    """Request tracking ID for debugging."""
-
-    model_config = {"title": "ErrorResponse"}
+    model_config = {
+        "title": "ErrorResponse",
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "error_code": "VALIDATION_ERROR",
+                    "message": "Invalid currency code. Expected ISO 4217 format.",
+                    "request_id": "550e8400-e29b-41d4-a716-446655440000",
+                    "details": {"field": "currency", "value": "USDA"}
+                }
+            ]
+        }
+    }

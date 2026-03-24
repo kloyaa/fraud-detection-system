@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     """Application settings validated at startup (Pydantic v2)."""
 
     # Environment
-    environment: str = Field(default="development", pattern="^(development|staging|production)$")
+    environment: str = Field(default="development", pattern="^(development|staging|production|testing)$")
     debug: bool = Field(default=False)
 
     # API

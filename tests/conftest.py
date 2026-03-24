@@ -8,8 +8,9 @@ import asyncio
 from typing import AsyncGenerator
 
 import pytest
+from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from httpx import AsyncClient
+from httpx import AsyncClient, ASGITransport
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.pool import StaticPool
 from testcontainers.postgres import PostgresContainer
@@ -97,8 +98,11 @@ async def db_engine(test_settings: Settings):
 @pytest.fixture
 async def db_session(db_engine) -> AsyncGenerator[AsyncSession, None]:
     """Provide test database session."""
-    async_session_maker = SessionLocal(
-        bind=db_engine,
+    from sqlalchemy.ext.asyncio import async_sessionmaker
+
+    async_session_maker = async_sessionmaker(
+        db_engine,
+        class_=AsyncSession,
         expire_on_commit=False,
         autoflush=False,
     )
@@ -108,10 +112,32 @@ async def db_session(db_engine) -> AsyncGenerator[AsyncSession, None]:
 
 
 @pytest.fixture
-def test_app(test_settings: Settings):
-    """Create FastAPI test app with test settings."""
+async def test_app(db_engine) -> AsyncGenerator[FastAPI, None]:
+    """Create FastAPI test app with test database engine override."""
+    from app.db.engine import get_db_session
+    from sqlalchemy.ext.asyncio import async_sessionmaker
+
     app = create_app()
-    return app
+    
+    # Create test-specific session maker
+    test_async_session_maker = async_sessionmaker(
+        db_engine,
+        class_=AsyncSession,
+        expire_on_commit=False,
+        autoflush=False,
+    )
+    
+    # Override the get_db_session dependency to use test database
+    async def override_get_db_session():
+        async with test_async_session_maker() as session:
+            yield session
+    
+    app.dependency_overrides[get_db_session] = override_get_db_session
+    
+    yield app
+    
+    # Cleanup overrides
+    app.dependency_overrides.clear()
 
 
 @pytest.fixture
@@ -123,5 +149,6 @@ def test_client(test_app) -> TestClient:
 @pytest.fixture
 async def async_client(test_app) -> AsyncGenerator[AsyncClient, None]:
     """Async HTTP client for async tests."""
-    async with AsyncClient(app=test_app, base_url="http://test") as client:
+    transport = ASGITransport(app=test_app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
         yield client

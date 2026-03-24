@@ -99,6 +99,9 @@ migrate:
 migrate-down:
 	alembic downgrade -1
 
+migrate-show:
+	alembic current
+
 migrate-new:
 	@if [ -z "$(NAME)" ]; then echo "Usage: make migrate-new NAME=description"; exit 1; fi
 	alembic revision --autogenerate -m "$(NAME)"
