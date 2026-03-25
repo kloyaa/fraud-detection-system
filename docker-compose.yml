@@ -100,7 +100,6 @@ services:
       timeout: 10s
       start_period: 15s
       retries: 3
-    command: pnpm dev
 
 volumes:
   postgres_data:
