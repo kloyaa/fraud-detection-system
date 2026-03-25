@@ -7,8 +7,8 @@ version:        1.0.0
 owners:         Marcus Chen (@marcus) — Chief Risk Architect
                 Darius Okafor (@darius) — Staff SRE / Platform Engineer
 reviewers:      "@sofia · @yuki · @james"
-last_updated:   Sprint 3
-status:         Approved — Sprint 4 revision scheduled post load test
+last_updated:   Pre-development
+status:         Approved — revision to be scheduled post load test
 horizon:        12 months (2024-Q2 → 2025-Q2)
 classification: Internal — Engineering Confidential
 ```
@@ -65,8 +65,8 @@ This document defines the capacity model for RAS — traffic projections, infras
 
 | Metric | Value | Derivation |
 |---|---|---|
-| Requests per pod per second | 500 RPS | Empirical: load test at 2x peak |
-| CPU per pod | 2 vCPU | Load test measurement |
+| Requests per pod per second | 500 RPS | Projection based on service design |
+| CPU per pod | 2 vCPU | Estimate |
 | Memory per pod | 1.5 GB | Pydantic model cache + connection pools |
 | Pods at GA (5k TPS) | 3 min → 10 max | 5,000 / 500 = 10 pods |
 | Pods at Q2 2025 (50k TPS) | 10 min → 100 max | 50,000 / 500 = 100 pods |
@@ -123,7 +123,7 @@ spec:
 | Memory per pod | 4 GB | Model weights × 3 models + feature vectors |
 | Pods at GA | 2 min → 4 max | 5,000 × 0.85 (ML path) / 2,500 = 2 pods |
 | Pods at Q2 2025 | 4 min → 20 max | 50,000 × 0.85 / 2,500 = 17 pods |
-| Cold-start warmup | 1,000 inferences | ISS-001 resolved — readiness probe gates traffic |
+| Cold-start warmup | 1,000 inferences | ISS-001 open — readiness probe configuration pending |
 
 ```yaml
 # k8s/bentoml/hpa.yaml
@@ -154,7 +154,7 @@ spec:
 | Storage at 90 days | 180 GB | 1.8 TB | Decisions table only |
 | Instance type (primary) | r7g.2xlarge | r7g.8xlarge | 64 GB RAM — buffer pool sizing |
 | Read replicas | 2 | 4 | Analyst queries + case management |
-| PgBouncer pool size | 20/pod | 15/pod (more pods) | ISS-002 resolved: pool_size=15 |
+| PgBouncer pool size | 20/pod | 15/pod (more pods) | ISS-002 open: pool_size target=15, pending resolution |
 | Max connections | 500 | 2,000 | PgBouncer → PostgreSQL |
 
 **Partitioning strategy (@sofia / @marcus):**
@@ -201,7 +201,7 @@ CREATE TABLE risk_decisions_2024_04
 | Memory for velocity keys | 600 MB | 6 GB | Well within cluster capacity |
 | Feast feature memory | ~8 GB | ~80 GB | 47 features × float64 × 2M customers |
 
-**@sofia (ISS-002 resolution):** "PgBouncer pool exhaustion was at the application level, not Redis. Redis pool sizing: `asyncio-redis` connection pool of 20 per scoring pod × 200 pods (Q2 2025 max) = 4,000 Redis connections total. Redis Cluster supports 10,000+ client connections per node. Not a constraint."
+**@sofia (ISS-002 context):** "PgBouncer pool exhaustion was at the application level, not Redis. Redis pool sizing: `asyncio-redis` connection pool of 20 per scoring pod × 200 pods (Q2 2025 max) = 4,000 Redis connections total. Redis Cluster supports 10,000+ client connections per node. Not a constraint."
 
 ### 3.6 Apache Kafka
 
@@ -309,10 +309,10 @@ node_pool_monitoring:
 | Action | Saving | Timeline | Owner |
 |---|---|---|---|
 | Spot instances for scoring API pods | -$12,000/mo at Q2 2025 | GA | `@darius` |
-| Cassandra TWCS compaction (reduces IOPS) | -$2,400/mo | Sprint 4 | `@darius` |
-| Snowflake auto-suspend (idle warehouse) | -$800/mo | Sprint 4 | `@yuki` |
+| Cassandra TWCS compaction (reduces IOPS) | -$2,400/mo | Pre-development | `@darius` |
+| Snowflake auto-suspend (idle warehouse) | -$800/mo | Pre-development | `@yuki` |
 | Reserved instances for always-on nodes (3-year) | -$8,000/mo at Q2 2025 | Q3 2024 | `@darius` |
-| S3 Intelligent-Tiering for Flink checkpoints | -$300/mo | Sprint 4 | `@darius` |
+| S3 Intelligent-Tiering for Flink checkpoints | -$300/mo | Pre-development | `@darius` |
 
 ---
 
@@ -391,7 +391,7 @@ Impact:    ~15-30s traffic re-routing (Cloudflare health check interval)
            Cassandra: LOCAL_QUORUM satisfied by eu-west-1 DC
            Redis: regional cluster, eu-west-1 velocity state is independent
 
-Tested:    ❌ NOT YET — scheduled chaos experiment Sprint 4 (gameday)
+Tested:    ❌ NOT YET — to be scheduled
            Runbook: docs/runbooks/regional_failover.md (DRAFT)
 ```
 
@@ -404,16 +404,16 @@ Stress ceiling: 100,000 TPS (current design)
 ⚠️  CAPACITY GAP IDENTIFIED:
     Black Friday peak at Q2 2025 volume EXCEEDS current stress ceiling.
     Action required before Q4 2024:
-      1. Validate 100k TPS ceiling with load test (Sprint 4)
+      1. Validate 100k TPS ceiling with load test (Pre-development)
       2. Identify bottleneck at 100k TPS
       3. Plan capacity expansion OR merchant traffic throttling for peak period
-      4. @marcus + @darius joint design session — Sprint 4
+      4. @marcus + @darius joint design session — Pre-development
 
 Holiday runbook:    docs/runbooks/holiday_capacity.md (NOT YET CREATED)
 Pre-holiday review: 6 weeks before Black Friday → 2024-10-14
 ```
 
-> *@marcus:* "The Black Friday gap is a known risk. At Q2 2025 volume (50k TPS baseline), a 4x holiday multiplier puts us at 200k TPS — 2x our stress ceiling. We have two options: (1) scale the stress ceiling to 200k TPS before Q4 (significant infrastructure investment), or (2) implement merchant-level rate limiting that gracefully degrades non-critical merchants during peak periods while protecting Tier 1 merchants. Option 2 is my preference — it is cheaper and more operationally controllable. @james needs to review the contractual SLA implications of rate limiting with merchants. This goes to the Architecture Review Board in Sprint 4."
+> *@marcus:* "The Black Friday gap is a known risk. At Q2 2025 volume (50k TPS baseline), a 4x holiday multiplier puts us at 200k TPS — 2x our stress ceiling. We have two options: (1) scale the stress ceiling to 200k TPS before Q4 (significant infrastructure investment), or (2) implement merchant-level rate limiting that gracefully degrades non-critical merchants during peak periods while protecting Tier 1 merchants. Option 2 is my preference — it is cheaper and more operationally controllable. @james needs to review the contractual SLA implications of rate limiting with merchants. This goes to the Architecture Review Board in Pre-development."
 
 ---
 

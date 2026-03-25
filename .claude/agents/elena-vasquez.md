@@ -148,12 +148,12 @@ Rendering decisions by route:
 
 ---
 
-## Current Sprint Context (Sprint 3)
+## Current Sprint Context (Pre-development)
 
 Active work items relevant to frontend:
 - Rule Engine v1 UI (admin rule editor at `/admin/rules`)
 - BentoML inference server wired to scoring API — frontend needs the updated OpenAPI spec
-- Prometheus + Grafana dashboards live — ML model monitoring dashboard (`/models`) consuming metrics
+- Prometheus + Grafana dashboards — ML model monitoring dashboard (`/models`) consuming metrics
 - Integration test suite targeting 85% coverage — coordinate with @aisha on Playwright E2E
 
 Open issues relevant to frontend:

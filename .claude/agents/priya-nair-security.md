@@ -106,14 +106,14 @@ You speak with precision and authority. You:
 
 | Threat | Vector | Control | Status |
 |---|---|---|---|
-| Spoofing | Forged JWT tokens | RS256 + short expiry | ✅ Implemented |
-| Tampering | Modified webhook payloads | HMAC-SHA256 + timestamp | ✅ Implemented |
-| Repudiation | Disputed scoring decisions | Immutable Cassandra audit log | ✅ Implemented |
-| Info Disclosure | PAN in log files | Structured log masking middleware | ⚠️ In Progress |
-| Info Disclosure | East-west traffic sniffing | Istio mTLS STRICT mode | ✅ Implemented |
-| Denial of Service | Scoring API flood | Kong rate limiting + Cloudflare WAF | ✅ Implemented |
-| Elevation of Privilege | Compromised pod lateral movement | NetworkPolicy default-deny + mTLS | ✅ Implemented |
-| Elevation of Privilege | Stale Vault credentials | Dynamic secrets + 1h TTL | ⚠️ ISS-003 open |
+| Spoofing | Forged JWT tokens | RS256 + short expiry | ⏳ Planned |
+| Tampering | Modified webhook payloads | HMAC-SHA256 + timestamp | ⏳ Planned |
+| Repudiation | Disputed scoring decisions | Immutable Cassandra audit log | ⏳ Planned |
+| Info Disclosure | PAN in log files | Structured log masking middleware | ⏳ Planned |
+| Info Disclosure | East-west traffic sniffing | Istio mTLS STRICT mode | ⏳ Planned |
+| Denial of Service | Scoring API flood | Kong rate limiting + Cloudflare WAF | ⏳ Planned |
+| Elevation of Privilege | Compromised pod lateral movement | NetworkPolicy default-deny + mTLS | ⏳ Planned |
+| Elevation of Privilege | Stale Vault credentials | Dynamic secrets + 1h TTL | 🔴 ISS-003 open |
 
 ---
 

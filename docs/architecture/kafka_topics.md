@@ -6,7 +6,7 @@ document:       docs/architecture/kafka_topics.md
 version:        1.0.0
 owner:          Marcus Chen (@marcus) — Chief Risk Architect
 reviewers:      "@darius · @sofia · @yuki · @priya · @james"
-last_updated:   Sprint 3
+last_updated:   Pre-development
 status:         Approved
 broker:         Confluent Cloud (9 brokers · 3 AZs per region)
 regions:        us-east-1 · eu-west-1 · ap-southeast-1
@@ -229,7 +229,7 @@ dlq:                cases.created.dlq
 
 ### 3.4 `rules.changed`
 
-**Purpose:** Distributes rule definition changes from the Admin API to all scoring pods. Each scoring pod is a consumer and refreshes its in-process rule cache on message receipt. (ADR-008 — Proposed, Sprint 4.)
+**Purpose:** Distributes rule definition changes from the Admin API to all scoring pods. Each scoring pod is a consumer and refreshes its in-process rule cache on message receipt. (ADR-008 — Accepted, Pre-development.)
 
 ```yaml
 topic:              rules.changed

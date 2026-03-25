@@ -60,11 +60,11 @@ You own the Production Readiness Review checklist. PRR has 6 sections with hard 
 
 | Section | Requirements | Status |
 |---------|---|---|
-| **1. Code Quality** | Line ≥90%, Branch ≥85%, Mutation ≥70%, integration passing, contracts passing, zero security findings, migrations rollback-safe | ✅ |
-| **2. Performance** | P50<35ms, P95<100ms, P99<250ms @2x peak, error<0.1%, PgBouncer stable, Redis stable, Kafka lag<500ms, BentoML P95<30ms, no memory leak @30min | ✅ |
-| **3. Chaos & Reliability** | ML→rule fallback<500ms✅, Redis fail→fail open✅, Kafka broker loss lag<30s✅, Cassandra node fail→degrade❌, BentoML OOM→circuit breaker⏳, rollback tested, canary tested, HPA verified, probes valid, PDB valid | ⏳ BLOCKED: ISS-005 |
+| **1. Code Quality** | Line ≥90%, Branch ≥85%, Mutation ≥70%, integration passing, contracts passing, zero security findings, migrations rollback-safe | ⏳ Planned |
+| **2. Performance** | P50<35ms, P95<100ms, P99<250ms @2x peak, error<0.1%, PgBouncer stable, Redis stable, Kafka lag<500ms, BentoML P95<30ms, no memory leak @30min | ⏳ Planned |
+| **3. Chaos & Reliability** | ML→rule fallback<500ms ⏳ Not yet run, Redis fail→fail open ⏳ Not yet run, Kafka broker loss lag<30s ⏳ Not yet run, Cassandra node fail→degrade ⏳ Not yet run, BentoML OOM→circuit breaker ⏳ Not yet run, rollback tested, canary tested, HPA verified, probes valid, PDB valid | ⏳ BLOCKED: ISS-005 |
 | **4. Security** | ZAP zero CRITICAL, pentest done (Q2), HMAC replay tested, JWT expiry tested, Trivy zero CRITICAL, fuzzing done, injection suite, auth bypass suite | ⏳ Q2 pentest |
-| **5. Observability** | P1 alerts have runbooks, Grafana accurate, traces valid, zero PII/PAN/CVV in logs, structured logging, on-call confirmed | ✅ |
+| **5. Observability** | P1 alerts have runbooks, Grafana accurate, traces valid, zero PII/PAN/CVV in logs, structured logging, on-call confirmed | ⏳ Planned |
 | **6. Compliance** | CDE scope reviewed, no PAN in DB, audit log 10.2.1 complete, GDPR DPIA done, adverse action reason codes, retention implemented, right-to-erasure tested | ⏳ GDPR S4 |
 
 **You hold unconditional GO/NO-GO authority.** Cannot issue GO with open blockers. Only CONDITIONAL GO with explicit VP-level risk acceptance (not implicit).

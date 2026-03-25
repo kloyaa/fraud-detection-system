@@ -1,4 +1,4 @@
-.PHONY: help dev test lint typecheck clean install migrate docker-up docker-down docker-logs docker-build docker-prod
+.PHONY: help dev test lint typecheck clean install migrate docker-up docker-down docker-logs docker-build docker-prod frontend-dev frontend-build frontend-install frontend-lint frontend-typecheck
 
 help:
 	@echo "Risk Assessment System (RAS) Backend"
@@ -32,6 +32,13 @@ help:
 	@echo "  make migrate-down     Rollback last migration"
 	@echo "  make migrate-new NAME Create new migration (e.g. 'make migrate-new add_users_table')"
 	@echo ""
+	@echo "Frontend:"
+	@echo "  make frontend-dev       Start Next.js dev server (port 3000)"
+	@echo "  make frontend-build     Production build"
+	@echo "  make frontend-install   Install frontend dependencies (pnpm)"
+	@echo "  make frontend-lint      Run ESLint + TypeScript check"
+	@echo "  make frontend-typecheck Run TypeScript type checking"
+	@echo ""
 	@echo "Cleanup:"
 	@echo "  make clean            Remove __pycache__, .pytest_cache, .mypy_cache"
 	@echo "  make clean-all        Remove all generated files + venv"
@@ -47,6 +54,10 @@ docker-down:
 
 docker-logs:
 	docker-compose logs -f app
+
+docker-clean:
+	docker-compose down --volumes --remove-orphans
+	docker system prune -f
 
 docker-build:
 	docker build -t ras:latest .
@@ -72,16 +83,16 @@ install:
 	pre-commit install
 
 test:
-	pytest -xvs
+	source .venv/bin/activate && pytest -xvs
 
 test-unit:
-	pytest -xvs -m unit
+	source .venv/bin/activate && pytest -xvs -m "not integration"
 
 test-integration:
-	pytest -xvs -m integration
+	source .venv/bin/activate && pytest -xvs -m "integration"
 
 test-cov:
-	pytest --cov=app --cov-report=html --cov-report=term-missing
+	source .venv/bin/activate && pytest --cov=app --cov-report=html --cov-report=term-missing
 
 lint:
 	ruff check app tests --fix
@@ -105,6 +116,22 @@ migrate-show:
 migrate-new:
 	@if [ -z "$(NAME)" ]; then echo "Usage: make migrate-new NAME=description"; exit 1; fi
 	alembic revision --autogenerate -m "$(NAME)"
+
+# Frontend Commands
+frontend-dev:
+	cd frontend && pnpm dev
+
+frontend-build:
+	cd frontend && pnpm build
+
+frontend-install:
+	cd frontend && pnpm install
+
+frontend-lint:
+	cd frontend && pnpm lint
+
+frontend-typecheck:
+	cd frontend && pnpm typecheck
 
 clean:
 	find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true

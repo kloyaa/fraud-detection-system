@@ -4,7 +4,7 @@
 id:         ADR-005
 title:      Entity Relationship Graph Store and Usage Pattern
 status:     Accepted
-date:       2024-01-15  (Sprint 2)
+date:       2024-01-15  (Pre-development)
 author:     Marcus Chen (@marcus)
 reviewers:  "@yuki · @darius · @sofia"
 deciders:   "@marcus · @yuki"
@@ -45,7 +45,7 @@ Equivalent PostgreSQL recursive CTE is 40 lines and performs full table scans wi
 
 **Why async only — ISS-004 background:**
 
-During Sprint 2 load testing, a prototype wired Neo4j 3-hop traversal into the real-time scoring path. P95 latency immediately exceeded 200ms — the entire scoring latency budget. The traversal itself was 40–200ms depending on graph density. This is architecturally incompatible with a 100ms P95 SLA.
+During pre-development prototype testing, a prototype wired Neo4j 3-hop traversal into the real-time scoring path. P95 latency immediately exceeded 200ms — the entire scoring latency budget. The traversal itself was 40–200ms depending on graph density. This is architecturally incompatible with a 100ms P95 SLA.
 
 The correct architecture: Flink consumes `risk.decisions` from Kafka, runs Neo4j traversals asynchronously (outside the scoring hot path), computes `linked_fraud_ring_score`, `device_account_count_7d`, and `shared_device_accounts`, and writes results to Feast online store. The scoring pipeline reads these pre-computed values from Feast Redis at sub-5ms. Neo4j traversal latency is irrelevant to scoring latency.
 

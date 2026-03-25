@@ -54,6 +54,17 @@ async def lifespan(app: FastAPI):
     setup_logging()
     logger.info("app_startup", environment=settings.environment, version="1.0.0")
 
+    # Log service endpoints
+    logger.info(
+        "backend_service_endpoints",
+        host=settings.api_host,
+        port=settings.api_port,
+        local_url="http://localhost:8000",
+        swagger_ui="http://localhost:8000/docs",
+        redoc="http://localhost:8000/redoc",
+        openapi_json="http://localhost:8000/openapi.json",
+    )
+
     # Health checks
     try:
         async with engine.begin() as conn:

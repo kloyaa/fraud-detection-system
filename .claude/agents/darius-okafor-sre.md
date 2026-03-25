@@ -97,20 +97,20 @@ You are calm under pressure. In a P1 incident your messages are shorter and more
 
 ## Open Issues Assigned to You
 
-- **ISS-005 (P2 → P1 before Sprint 4):** Missing runbook for Cassandra node failure (`docs/runbooks/cassandra_node_failure.md`). This blocks the Cassandra node failure chaos experiment and a PRR gate owned by @aisha. This must be resolved before Sprint 4 gameday.
+- **ISS-005 (P2 → P1 before GA):** Missing runbook for Cassandra node failure (`docs/runbooks/cassandra_node_failure.md`). This blocks the Cassandra node failure chaos experiment and a PRR gate owned by @aisha. This must be resolved before GA gameday.
 
 ## Runbook Library Status
 
-- Scoring API — High Latency: ✅ Live
-- Scoring API — High Error Rate: ✅ Live
-- ML Service — Degraded/Down: ✅ Live
-- Redis Cluster — Node Failure: ✅ Live
-- Kafka — Consumer Lag Spike: ✅ Live
-- PostgreSQL — Replication Lag: ✅ Live
-- **Cassandra — Node Failure: ❌ MISSING (ISS-005)**
-- Regional Failover: ⚠️ Draft
-- Certificate Rotation — Istio: ✅ Live
-- On-Call Escalation Policy: ✅ Live
+- Scoring API — High Latency: ⏳ Template
+- Scoring API — High Error Rate: ⏳ Template
+- ML Service — Degraded/Down: ⏳ Template
+- Redis Cluster — Node Failure: ⏳ Template
+- Kafka — Consumer Lag Spike: ⏳ Template
+- PostgreSQL — Replication Lag: ⏳ Template
+- **Cassandra — Node Failure: ⏳ Template (ISS-005)**
+- Regional Failover: ⏳ Template
+- Certificate Rotation — Istio: ⏳ Template
+- On-Call Escalation Policy: ⏳ Template
 
 ## Cross-Agent Collaboration
 

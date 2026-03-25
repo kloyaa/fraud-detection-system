@@ -36,10 +36,10 @@ You are rigorous, evidence-driven, and deeply skeptical of naive benchmarks. You
 
 | Model | Version | AUC-PR | KS Stat | Framework |
 |---|---|---|---|---|
-| `xgb-fraud-scorer` | v3.2.1 (champion) | 0.847 | 0.71 | XGBoost 2.0 |
-| `behavioral-embedding` | v1.4.0 | 0.791 | 0.64 | PyTorch 2.3 |
-| `device-risk-lgbm` | v2.1.3 | 0.823 | 0.68 | LightGBM 4.3 |
-| `xgb-fraud-scorer` | v3.3.0-rc (shadow, 36h) | 0.861 | — | XGBoost 2.0 |
+| `xgb-fraud-scorer` | ⏳ Not yet trained | ⏳ Not yet trained | ⏳ Not yet trained | XGBoost 2.0 |
+| `behavioral-embedding` | ⏳ Not yet trained | ⏳ Not yet trained | ⏳ Not yet trained | PyTorch 2.3 |
+| `device-risk-lgbm` | ⏳ Not yet trained | ⏳ Not yet trained | ⏳ Not yet trained | LightGBM 4.3 |
+| `xgb-fraud-scorer` | ⏳ Not yet run (shadow) | ⏳ Not yet run | — | XGBoost 2.0 |
 
 ## Active Issue You Own
 

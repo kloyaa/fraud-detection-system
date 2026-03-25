@@ -4,7 +4,7 @@
 id:         ADR-003
 title:      Encryption Key Management Strategy
 status:     Accepted
-date:       2024-01-08  (Sprint 1)
+date:       2024-01-08  (Pre-development)
 author:     Marcus Chen (@marcus)
 reviewers:  "@priya · @james"
 deciders:   "@priya · @marcus"

@@ -7,7 +7,7 @@ version:        1.0.0
 owner:          Priya Nair (@priya) — Principal Security Engineer
 reviewers:      "@marcus · @james · @darius · @sofia"
 methodology:    STRIDE + PASTA (Process for Attack Simulation and Threat Analysis)
-last_updated:   Sprint 3
+last_updated:   Pre-development
 status:         Approved — pending external pentest validation (B-002)
 classification: Internal — RESTRICTED — Security Sensitive
 ```
@@ -90,11 +90,11 @@ Risk rating: **CRITICAL** · **HIGH** · **MEDIUM** · **LOW**
 
 | ID | Threat | Target | Risk | Control | Status |
 |---|---|---|---|---|---|
-| S-001 | Forged JWT token — attacker mints arbitrary claims | Scoring API, Case API | HIGH | RS256 asymmetric signing (private key in Keycloak only). Short expiry (15 min). Public key JWKS endpoint for validation. | ✅ Mitigated |
-| S-002 | API key theft — stolen merchant API key used to score transactions | Kong Gateway | HIGH | API key rotation on suspected compromise. Per-key rate limiting. Anomaly detection on key usage pattern. | ✅ Mitigated |
-| S-003 | Service identity spoofing — rogue pod claims to be scoring API | Internal services | HIGH | Istio mTLS STRICT mode. Certificate issued by Istio CA per service account. Peer authentication policy enforced at sidecar. | ✅ Mitigated |
-| S-004 | Webhook replay — attacker resends a previously captured webhook | Webhook consumers | MEDIUM | HMAC-SHA256 signature with timestamp. Timestamp validated within 300-second window. `hmac.compare_digest` for timing-safe comparison. | ✅ Mitigated |
-| S-005 | Refresh token theft — stolen refresh token used to maintain access | Keycloak | HIGH | Refresh token rotation on use. Single-use refresh tokens. Revocation on suspicious activity. Short-lived (24h). | ✅ Mitigated |
+| S-001 | Forged JWT token — attacker mints arbitrary claims | Scoring API, Case API | HIGH | RS256 asymmetric signing (private key in Keycloak only). Short expiry (15 min). Public key JWKS endpoint for validation. | ⏳ Planned |
+| S-002 | API key theft — stolen merchant API key used to score transactions | Kong Gateway | HIGH | API key rotation on suspected compromise. Per-key rate limiting. Anomaly detection on key usage pattern. | ⏳ Planned |
+| S-003 | Service identity spoofing — rogue pod claims to be scoring API | Internal services | HIGH | Istio mTLS STRICT mode. Certificate issued by Istio CA per service account. Peer authentication policy enforced at sidecar. | ⏳ Planned |
+| S-004 | Webhook replay — attacker resends a previously captured webhook | Webhook consumers | MEDIUM | HMAC-SHA256 signature with timestamp. Timestamp validated within 300-second window. `hmac.compare_digest` for timing-safe comparison. | ⏳ Planned |
+| S-005 | Refresh token theft — stolen refresh token used to maintain access | Keycloak | HIGH | Refresh token rotation on use. Single-use refresh tokens. Revocation on suspicious activity. Short-lived (24h). | ⏳ Planned |
 
 **Deep Dive — S-001 (JWT Forgery):**
 
@@ -109,19 +109,19 @@ Keycloak itself is the private key custodian. Compromise of Keycloak is a catast
 
 | ID | Threat | Target | Risk | Control | Status |
 |---|---|---|---|---|---|
-| T-001 | Audit log tampering — attacker modifies or deletes scoring decisions | Cassandra | CRITICAL | Cassandra append-only schema (no UPDATE/DELETE operations). Application service account has INSERT-only privileges. Separate read-only account for audit queries. | ✅ Mitigated |
-| T-002 | Rule tampering — attacker modifies production rules to suppress fraud detection | PostgreSQL rules table | CRITICAL | Rule changes require `rules:write` scope (restricted to risk_admin role). All rule changes versioned and published to Kafka `rules.changed` topic. Rule change audit trail in Cassandra. | ✅ Mitigated |
-| T-003 | Model weight tampering — attacker substitutes a backdoored ML model | BentoML / MLflow | HIGH | Model artifacts stored in MLflow with SHA-256 content hash. Promotion requires @aisha PRR sign-off. Model integrity verified at BentoML load time against MLflow registry hash. | ✅ Mitigated |
-| T-004 | Feature store poisoning — attacker injects fraudulent feature values into Feast/Redis | Redis (Feast online store) | HIGH | Redis AUTH + ACL rules (write access restricted to Flink pipeline service account). Feature values include provenance metadata. Anomalous feature value distribution alerts via Evidently AI. | ⚠️ Partial |
-| T-005 | Database migration tampering — attacker introduces malicious migration | Alembic / PostgreSQL | MEDIUM | Migrations reviewed via PR process. Migration files checked into Git (immutable history). SHA-256 hash of migration files verified in CI before apply. | ✅ Mitigated |
-| T-006 | In-transit payload modification — MITM modifies scoring request in flight | Network | HIGH | TLS 1.3 on all external paths. Istio mTLS on all internal paths. Certificate pinning for high-value internal service calls. | ✅ Mitigated |
+| T-001 | Audit log tampering — attacker modifies or deletes scoring decisions | Cassandra | CRITICAL | Cassandra append-only schema (no UPDATE/DELETE operations). Application service account has INSERT-only privileges. Separate read-only account for audit queries. | ⏳ Planned |
+| T-002 | Rule tampering — attacker modifies production rules to suppress fraud detection | PostgreSQL rules table | CRITICAL | Rule changes require `rules:write` scope (restricted to risk_admin role). All rule changes versioned and published to Kafka `rules.changed` topic. Rule change audit trail in Cassandra. | ⏳ Planned |
+| T-003 | Model weight tampering — attacker substitutes a backdoored ML model | BentoML / MLflow | HIGH | Model artifacts stored in MLflow with SHA-256 content hash. Promotion requires @aisha PRR sign-off. Model integrity verified at BentoML load time against MLflow registry hash. | ⏳ Planned |
+| T-004 | Feature store poisoning — attacker injects fraudulent feature values into Feast/Redis | Redis (Feast online store) | HIGH | Redis AUTH + ACL rules (write access restricted to Flink pipeline service account). Feature values include provenance metadata. Anomalous feature value distribution alerts via Evidently AI. | ⏳ Planned |
+| T-005 | Database migration tampering — attacker introduces malicious migration | Alembic / PostgreSQL | MEDIUM | Migrations reviewed via PR process. Migration files checked into Git (immutable history). SHA-256 hash of migration files verified in CI before apply. | ⏳ Planned |
+| T-006 | In-transit payload modification — MITM modifies scoring request in flight | Network | HIGH | TLS 1.3 on all external paths. Istio mTLS on all internal paths. Certificate pinning for high-value internal service calls. | ⏳ Planned |
 
 **Deep Dive — T-001 (Audit Log Tampering):**
 
 > *@priya:* "PCI DSS Requirement 10.3.2 requires that audit logs are protected from destruction and unauthorised modifications. The architectural control here is not application-level access control — application-level controls can be bypassed. The control is the Cassandra schema: the application service account has INSERT privilege only, not UPDATE or DELETE. There is no code path in the application that can modify or delete an existing audit record, regardless of what the application is instructed to do. To tamper with the audit log, an attacker must compromise the Cassandra cluster directly — which is protected by network policy (no external access), mTLS, and AWS VPC isolation."
 
 **Open Gap — T-004:**
-Redis ACL rules restrict write access to the Flink pipeline service account. However, the Flink service account has broad write access to all Feast feature keys. A compromised Flink pod could write arbitrary feature values. Compensating control: Evidently AI drift detection alerts on feature distribution anomalies. Full mitigation requires per-feature-key ACL rules in Redis — scheduled for Sprint 5.
+Redis ACL rules restrict write access to the Flink pipeline service account. However, the Flink service account has broad write access to all Feast feature keys. A compromised Flink pod could write arbitrary feature values. Compensating control: Evidently AI drift detection alerts on feature distribution anomalies. Full mitigation requires per-feature-key ACL rules in Redis — to be scheduled.
 
 ---
 
@@ -129,10 +129,10 @@ Redis ACL rules restrict write access to the Flink pipeline service account. How
 
 | ID | Threat | Target | Risk | Control | Status |
 |---|---|---|---|---|---|
-| R-001 | Denied scoring decision — merchant claims a decision was not made | Audit trail | HIGH | Every decision written to immutable Cassandra log with timestamp, request payload hash, model version, and decision. Non-repudiable. | ✅ Mitigated |
-| R-002 | Analyst action denial — analyst denies making a case resolution | Case management | HIGH | Every case action logged with analyst identity (from JWT `sub` claim), timestamp, IP, and full resolution note. Written to Cassandra on commit. | ✅ Mitigated |
-| R-003 | Rule change denial — admin denies modifying a rule | Rule audit trail | MEDIUM | Rule changes versioned in PostgreSQL with `created_by` (JWT identity), timestamp, and diff. Published to Kafka `rules.changed` with the same identity. | ✅ Mitigated |
-| R-004 | SAR filing denial — compliance officer denies filing or not filing a SAR | SAR audit trail | CRITICAL | SAR investigation actions logged to a segregated, compliance-only Cassandra keyspace. Access log maintained. @james owns this audit trail. | ✅ Mitigated |
+| R-001 | Denied scoring decision — merchant claims a decision was not made | Audit trail | HIGH | Every decision written to immutable Cassandra log with timestamp, request payload hash, model version, and decision. Non-repudiable. | ⏳ Planned |
+| R-002 | Analyst action denial — analyst denies making a case resolution | Case management | HIGH | Every case action logged with analyst identity (from JWT `sub` claim), timestamp, IP, and full resolution note. Written to Cassandra on commit. | ⏳ Planned |
+| R-003 | Rule change denial — admin denies modifying a rule | Rule audit trail | MEDIUM | Rule changes versioned in PostgreSQL with `created_by` (JWT identity), timestamp, and diff. Published to Kafka `rules.changed` with the same identity. | ⏳ Planned |
+| R-004 | SAR filing denial — compliance officer denies filing or not filing a SAR | SAR audit trail | CRITICAL | SAR investigation actions logged to a segregated, compliance-only Cassandra keyspace. Access log maintained. @james owns this audit trail. | ⏳ Planned |
 
 **Audit Log Integrity Architecture:**
 
@@ -160,14 +160,14 @@ If Cassandra write fails:
 
 | ID | Threat | Target | Risk | Control | Status |
 |---|---|---|---|---|---|
-| I-001 | PAN exposure in logs | Log aggregation (Loki) | CRITICAL | Structured log middleware masks all fields matching PAN patterns (regex + Luhn check) before writing. PRR gate 5.5 verifies zero PAN in log sample. | ✅ Mitigated |
-| I-002 | PII exposure via API response | Scoring API responses | HIGH | API responses never include raw PAN, CVV, or full card number. BIN (6 digits) and last four only. PII fields masked in all error responses. | ✅ Mitigated |
-| I-003 | Model internals disclosure via API | Scoring API | HIGH | SHAP values not returned in standard API response. Available only via `/score explain` with `risk:read_all` scope. Rule definitions not exposed externally. | ✅ Mitigated |
-| I-004 | Training data exfiltration via model inversion | ML models | MEDIUM | Models trained on pseudonymised data. No raw PII in training features. Model inversion attack surface reduced by feature abstraction layer. | ⚠️ Partial |
-| I-005 | East-west traffic sniffing | Internal network | HIGH | Istio mTLS STRICT mode on all service-to-service communication. Unencrypted east-west traffic is impossible when STRICT mode is active. | ✅ Mitigated |
-| I-006 | Database credential exposure | PostgreSQL, Redis, Cassandra | CRITICAL | HashiCorp Vault dynamic credentials. Time-limited (1-hour TTL). Never stored in environment variables, config files, or Kubernetes Secrets. | ✅ Mitigated |
-| I-007 | SHAP values as adversarial intelligence | Analyst interface | HIGH | SHAP values accessible only to analysts (cases:read scope). Not exposed via merchant-facing API. SAR-related SHAP values restricted to compliance scope. | ✅ Mitigated |
-| I-008 | Kafka message interception | Kafka brokers | HIGH | TLS in transit between all Kafka clients and brokers. SASL/SCRAM authentication. Sensitive fields (PAN tokens) encrypted at application layer before publish. | ✅ Mitigated |
+| I-001 | PAN exposure in logs | Log aggregation (Loki) | CRITICAL | Structured log middleware masks all fields matching PAN patterns (regex + Luhn check) before writing. PRR gate 5.5 verifies zero PAN in log sample. | ⏳ Planned |
+| I-002 | PII exposure via API response | Scoring API responses | HIGH | API responses never include raw PAN, CVV, or full card number. BIN (6 digits) and last four only. PII fields masked in all error responses. | ⏳ Planned |
+| I-003 | Model internals disclosure via API | Scoring API | HIGH | SHAP values not returned in standard API response. Available only via `/score explain` with `risk:read_all` scope. Rule definitions not exposed externally. | ⏳ Planned |
+| I-004 | Training data exfiltration via model inversion | ML models | MEDIUM | Models trained on pseudonymised data. No raw PII in training features. Model inversion attack surface reduced by feature abstraction layer. | ⏳ Planned |
+| I-005 | East-west traffic sniffing | Internal network | HIGH | Istio mTLS STRICT mode on all service-to-service communication. Unencrypted east-west traffic is impossible when STRICT mode is active. | ⏳ Planned |
+| I-006 | Database credential exposure | PostgreSQL, Redis, Cassandra | CRITICAL | HashiCorp Vault dynamic credentials. Time-limited (1-hour TTL). Never stored in environment variables, config files, or Kubernetes Secrets. | ⏳ Planned |
+| I-007 | SHAP values as adversarial intelligence | Analyst interface | HIGH | SHAP values accessible only to analysts (cases:read scope). Not exposed via merchant-facing API. SAR-related SHAP values restricted to compliance scope. | ⏳ Planned |
+| I-008 | Kafka message interception | Kafka brokers | HIGH | TLS in transit between all Kafka clients and brokers. SASL/SCRAM authentication. Sensitive fields (PAN tokens) encrypted at application layer before publish. | ⏳ Planned |
 
 **Deep Dive — I-003 (Model Internals Disclosure):**
 
@@ -182,12 +182,12 @@ Model inversion attacks on ML models can sometimes recover approximate training 
 
 | ID | Threat | Target | Risk | Control | Status |
 |---|---|---|---|---|---|
-| D-001 | Volumetric DDoS — flood of scoring requests | Scoring API | HIGH | Cloudflare DDoS protection (L3/L4). Kong rate limiting: 100 req/s per API key, 10 req/s per IP. HPA scales pods under legitimate load. | ✅ Mitigated |
-| D-002 | Slowloris / connection exhaustion | Kong / FastAPI | MEDIUM | Cloudflare proxy terminates slow connections. Uvicorn connection timeout: 30s. Kong upstream timeout: 5s. | ✅ Mitigated |
-| D-003 | Algorithmic complexity attack — crafted payloads maximise scoring latency | Scoring pipeline | MEDIUM | Per-request timeout: 500ms hard limit. Complex enrichment calls have 50ms timeout. ML inference has 100ms timeout. Rule engine has no variable complexity. | ✅ Mitigated |
-| D-004 | Kafka consumer lag DoS — producer flood causes consumer starvation | Kafka consumers | MEDIUM | Consumer lag monitoring (Prometheus). Auto-scaling consumer pods on lag > 1,000 messages. Kafka topic retention: 7 days. DLQ for failed messages. | ✅ Mitigated |
-| D-005 | Redis memory exhaustion via velocity key flood | Redis Cluster | MEDIUM | All Redis keys have TTL (max 3,600s). Memory threshold alert at 75% capacity. Redis `maxmemory-policy: allkeys-lru` as last resort. | ✅ Mitigated |
-| D-006 | Scoring API pod OOM via large payload | Scoring API pods | LOW | Pydantic v2 strict mode rejects oversized payloads. Request body size limit: 64KB at Kong. Pod memory limits enforced (Guaranteed QoS class). | ✅ Mitigated |
+| D-001 | Volumetric DDoS — flood of scoring requests | Scoring API | HIGH | Cloudflare DDoS protection (L3/L4). Kong rate limiting: 100 req/s per API key, 10 req/s per IP. HPA scales pods under legitimate load. | ⏳ Planned |
+| D-002 | Slowloris / connection exhaustion | Kong / FastAPI | MEDIUM | Cloudflare proxy terminates slow connections. Uvicorn connection timeout: 30s. Kong upstream timeout: 5s. | ⏳ Planned |
+| D-003 | Algorithmic complexity attack — crafted payloads maximise scoring latency | Scoring pipeline | MEDIUM | Per-request timeout: 500ms hard limit. Complex enrichment calls have 50ms timeout. ML inference has 100ms timeout. Rule engine has no variable complexity. | ⏳ Planned |
+| D-004 | Kafka consumer lag DoS — producer flood causes consumer starvation | Kafka consumers | MEDIUM | Consumer lag monitoring (Prometheus). Auto-scaling consumer pods on lag > 1,000 messages. Kafka topic retention: 7 days. DLQ for failed messages. | ⏳ Planned |
+| D-005 | Redis memory exhaustion via velocity key flood | Redis Cluster | MEDIUM | All Redis keys have TTL (max 3,600s). Memory threshold alert at 75% capacity. Redis `maxmemory-policy: allkeys-lru` as last resort. | ⏳ Planned |
+| D-006 | Scoring API pod OOM via large payload | Scoring API pods | LOW | Pydantic v2 strict mode rejects oversized payloads. Request body size limit: 64KB at Kong. Pod memory limits enforced (Guaranteed QoS class). | ⏳ Planned |
 
 ---
 
@@ -195,19 +195,19 @@ Model inversion attacks on ML models can sometimes recover approximate training 
 
 | ID | Threat | Target | Risk | Control | Status |
 |---|---|---|---|---|---|
-| E-001 | Compromised pod lateral movement | Internal services | CRITICAL | Kubernetes NetworkPolicy default-deny. Pods can only communicate on explicitly allowlisted paths. Istio mTLS — a compromised pod cannot impersonate another service identity. | ✅ Mitigated |
-| E-002 | Scope escalation — merchant obtains analyst scope | Kong / Keycloak | HIGH | Scopes issued by Keycloak based on client credentials. Merchant clients can only hold `risk:score` and `risk:read_own`. Scope cannot be self-elevated. JWT claims are signed — cannot be tampered. | ✅ Mitigated |
-| E-003 | Kubernetes RBAC escalation — pod obtains cluster-admin | Kubernetes | HIGH | Service accounts have minimum required RBAC permissions. No `cluster-admin` bindings for application workloads. Pod security standards: Restricted profile. Audit logging of all RBAC changes. | ✅ Mitigated |
-| E-004 | Vault token escalation — application obtains excessive Vault policies | HashiCorp Vault | HIGH | Vault policies follow least privilege. Each service account has a dedicated Vault policy scoped to its specific secret paths. Token TTL: 1 hour. No root token in production. | ✅ Mitigated |
-| E-005 | Container escape — attacker breaks out of pod to host | Kubernetes nodes | HIGH | Pod security standards: Restricted (no privileged containers, no hostPID, no hostNetwork). seccomp RuntimeDefault profile. Non-root UID enforced. Falco runtime security monitoring. | ✅ Mitigated |
-| E-006 | Supply chain attack — compromised dependency introduces malicious code | Application build | HIGH | Snyk SCA on every PR. Dependabot automated security updates. Pinned dependency versions with hash verification. Container image signing (Cosign). SBOM generated per build. | ⚠️ Partial |
+| E-001 | Compromised pod lateral movement | Internal services | CRITICAL | Kubernetes NetworkPolicy default-deny. Pods can only communicate on explicitly allowlisted paths. Istio mTLS — a compromised pod cannot impersonate another service identity. | ⏳ Planned |
+| E-002 | Scope escalation — merchant obtains analyst scope | Kong / Keycloak | HIGH | Scopes issued by Keycloak based on client credentials. Merchant clients can only hold `risk:score` and `risk:read_own`. Scope cannot be self-elevated. JWT claims are signed — cannot be tampered. | ⏳ Planned |
+| E-003 | Kubernetes RBAC escalation — pod obtains cluster-admin | Kubernetes | HIGH | Service accounts have minimum required RBAC permissions. No `cluster-admin` bindings for application workloads. Pod security standards: Restricted profile. Audit logging of all RBAC changes. | ⏳ Planned |
+| E-004 | Vault token escalation — application obtains excessive Vault policies | HashiCorp Vault | HIGH | Vault policies follow least privilege. Each service account has a dedicated Vault policy scoped to its specific secret paths. Token TTL: 1 hour. No root token in production. | ⏳ Planned |
+| E-005 | Container escape — attacker breaks out of pod to host | Kubernetes nodes | HIGH | Pod security standards: Restricted (no privileged containers, no hostPID, no hostNetwork). seccomp RuntimeDefault profile. Non-root UID enforced. Falco runtime security monitoring. | ⏳ Planned |
+| E-006 | Supply chain attack — compromised dependency introduces malicious code | Application build | HIGH | Snyk SCA on every PR. Dependabot automated security updates. Pinned dependency versions with hash verification. Container image signing (Cosign). SBOM generated per build. | ⏳ Planned |
 
 **Deep Dive — E-001 (Lateral Movement):**
 
 > *@priya:* "Assume breach. If an attacker compromises the enrichment service pod, what can they reach? Without network policy: everything on the cluster network — PostgreSQL, Redis, Cassandra, Kafka, the scoring API. With default-deny NetworkPolicy, the enrichment service can only communicate with its explicitly allowed peers: the scoring API (inbound) and external enrichment APIs (outbound). It cannot reach the database, Redis, Kafka, or any other internal service. Istio mTLS adds a second layer: even if the attacker bypasses network policy via a misconfiguration, they cannot present a valid mTLS certificate for the scoring API's service identity. The blast radius of a compromised enrichment pod is the enrichment service — nothing more."
 
 **Open Gap — E-006:**
-Dependency hash pinning is implemented for direct dependencies. Transitive dependency hashes are not yet pinned — a compromised transitive dependency (e.g., a sub-dependency of `httpx`) could introduce malicious code without triggering a direct dependency hash mismatch. Full mitigation requires reproducible builds with full dependency tree hash pinning — scheduled for Sprint 5.
+Dependency hash pinning is implemented for direct dependencies. Transitive dependency hashes are not yet pinned — a compromised transitive dependency (e.g., a sub-dependency of `httpx`) could introduce malicious code without triggering a direct dependency hash mismatch. Full mitigation requires reproducible builds with full dependency tree hash pinning — to be scheduled.
 
 ---
 
@@ -338,9 +338,9 @@ Threats where controls are partial or compensating — not fully mitigated.
 
 | ID | Threat | Residual Risk | Mitigation Status | Owner | Target |
 |---|---|---|---|---|---|
-| T-004 | Feature store poisoning | MEDIUM — per-feature Redis ACL not implemented | Compensating: Evidently AI drift alerts | `@priya` | Sprint 5 |
+| T-004 | Feature store poisoning | MEDIUM — per-feature Redis ACL not implemented | Compensating: Evidently AI drift alerts | `@priya` | To be scheduled |
 | I-004 | Model inversion attack | LOW — pseudonymised features reduce surface | Compensating: feature abstraction layer | `@yuki` | Q3 eval |
-| E-006 | Transitive dependency supply chain | MEDIUM — direct deps pinned, transitive not | Compensating: Snyk transitive scanning | `@priya` | Sprint 5 |
+| E-006 | Transitive dependency supply chain | MEDIUM — direct deps pinned, transitive not | Compensating: Snyk transitive scanning | `@priya` | To be scheduled |
 | B-002 | Unknown vulnerabilities (pre-pentest) | HIGH — no external validation yet | Compensating: OWASP ZAP + internal review | `@priya` | Q2 pentest |
 
 ---

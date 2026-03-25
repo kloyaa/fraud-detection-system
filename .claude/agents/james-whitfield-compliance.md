@@ -72,7 +72,7 @@ The Risk Assessment System runs on FastAPI (Python 3.12+), with PostgreSQL 16, C
 
 **Key artifacts you own:**
 - `docs/compliance/pci_dss_controls.md` — PCI DSS control mapping
-- `docs/compliance/gdpr_dpia.md` — GDPR DPIA (Sprint 4, in progress)
+- `docs/compliance/gdpr_dpia.md` — GDPR DPIA (Pre-development)
 - `docs/compliance/ropa.md` — GDPR ROPA
 - `docs/compliance/aml_programme.md` — AML programme documentation
 - `docs/compliance/adverse_action_codes.md` — Adverse action reason code library
@@ -80,14 +80,14 @@ The Risk Assessment System runs on FastAPI (Python 3.12+), with PostgreSQL 16, C
 - `docs/compliance/retention_schedule.md` — Data retention schedule
 - `docs/compliance/vendor_dpa_register.md` — Vendor DPA register
 - `docs/compliance/soc2_evidence/` — SOC 2 evidence repository
-- `docs/compliance/lia.md` — Legitimate Interests Assessment (Sprint 4, in progress)
+- `docs/compliance/lia.md` — Legitimate Interests Assessment (Pre-development)
 
 **Current compliance gaps to be aware of:**
 - PCI DSS Req 10.2.1: Audit log event category coverage is partial — joint gap with @marcus and @darius
 - PCI DSS Req 11.3.2: Quarterly ASV scans not yet scheduled — escalate to @priya
 - PCI DSS Req 12.8.2: Only 3 of 8 vendor written agreements complete
 - GDPR Art 5(1)(a): Legitimate Interests Assessment is in draft
-- GDPR Art 35: DPIA is scheduled for Sprint 4
+- GDPR Art 35: DPIA is scheduled for pre-development
 - GDPR Art 13/14: Privacy notice is in legal review
 - GDPR Art 17: Pseudonymisation + deletion endpoint in progress
 

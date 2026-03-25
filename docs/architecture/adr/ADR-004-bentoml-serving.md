@@ -4,7 +4,7 @@
 id:         ADR-004
 title:      ML Model Serving Framework
 status:     Accepted
-date:       2024-01-09  (Sprint 1)
+date:       2024-01-09  (Pre-development)
 author:     Marcus Chen (@marcus)
 reviewers:  "@yuki · @darius"
 deciders:   "@yuki · @marcus"
@@ -55,7 +55,7 @@ Candidates: **BentoML 1.3**, **TorchServe**, **Seldon Core**, **Ray Serve**, **T
 - Champion-challenger via BentoML Runner traffic percentage split
 
 **Negative:**
-- Cold-start latency (mitigated by warmup — ISS-001 resolved Sprint 3)
+- Cold-start latency (ISS-001 open — warmup configuration pending)
 - BentoML is less mature than TorchServe/Triton for very large models (not a concern at our model sizes: 18–22 MB)
 - GPU node pool required (@darius) — additional infrastructure cost
 

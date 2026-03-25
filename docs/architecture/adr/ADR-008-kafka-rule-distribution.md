@@ -4,7 +4,7 @@
 id:             ADR-008
 title:          Rule Engine Configuration Distribution Strategy
 status:         Accepted
-date:           2024-03-18  (Sprint 4 — supersedes Proposed draft from Sprint 3)
+date:           2024-03-18  (Pre-development)
 author:         Marcus Chen (@marcus)
 reviewers:      "@sofia · @darius · @priya · @james"
 deciders:       "@marcus · @sofia"
@@ -57,7 +57,7 @@ Admin API
   (only after DB read succeeds)
 ```
 
-## Resolution of Sprint 3 Open Questions
+## Resolution of Pre-development Open Questions
 
 ### Q1: Synchronous or async rule refresh?
 
@@ -139,7 +139,7 @@ Requires service discovery of all pod IPs, retry logic for pods starting up, and
 **Why Kafka (single partition):**
 Single partition = total ordering. All pods apply rule changes in the same sequence. At-least-once delivery. PostgreSQL remains the authoritative store — Kafka is a notification bus only. Propagation latency < 500ms (Kafka < 100ms + PostgreSQL re-read < 200ms + cache update < 5ms).
 
-## Implementation (Sprint 4)
+## Implementation (Pre-development)
 
 ```python
 # app/engines/rule_cache.py
@@ -263,7 +263,7 @@ async def readiness(
 
 **Operational requirements (@darius):**
 - `ras-rule-cache` consumer group lag alert: > 10 messages → P1 (rules may be stale)
-- Runbook: `docs/runbooks/rule_cache_stale.md` required before Sprint 4 GA
+- Runbook: `docs/runbooks/rule_cache_stale.md` required before GA
 - Consumer group reset procedure documented for disaster recovery
 
 **Audit requirements (@james):**

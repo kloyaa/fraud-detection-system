@@ -252,7 +252,7 @@ All ADRs are documented in [docs/architecture/adr/](docs/architecture/adr/) with
 
 ---
 
-## Current Sprint (Sprint 3)
+## Sprint 0 — Pre-Development
 
 - [ ] Rule Engine v1 — 10 production rules
 - [ ] Feast feature store (online + offline)

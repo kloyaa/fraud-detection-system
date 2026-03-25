@@ -6,7 +6,7 @@ document:       docs/architecture/system_overview.md
 version:        1.0.0
 owner:          Marcus Chen (@marcus) — Chief Risk Architect
 reviewers:      "@priya · @darius · @sofia · @yuki"
-last_updated:   Sprint 3
+last_updated:   Pre-development
 status:         Approved
 classification: Internal — Engineering Confidential
 ```
@@ -396,14 +396,14 @@ All ADRs are stored in `docs/architecture/adr/`. The following decisions govern 
 
 | ADR | Title | Decision | Date | Status |
 |---|---|---|---|---|
-| ADR-001 | API Framework | FastAPI over Django REST Framework | Sprint 1 | ✅ Accepted |
-| ADR-002 | Event Log Storage | Cassandra over PostgreSQL for audit log | Sprint 1 | ✅ Accepted |
-| ADR-003 | Encryption Key Management | AWS KMS envelope encryption over self-managed keys | Sprint 1 | ✅ Accepted |
-| ADR-004 | ML Serving Framework | BentoML over TorchServe / Seldon | Sprint 1 | ✅ Accepted |
-| ADR-005 | Graph Store | Neo4j for entity graph (async only, not hot path) | Sprint 2 | ✅ Accepted |
-| ADR-006 | Velocity Counter Implementation | Redis sorted-set sliding window over Kafka Streams | Sprint 2 | ✅ Accepted |
-| ADR-007 | Service Mesh | Istio mTLS over manual certificate management | Sprint 2 | ✅ Accepted |
-| ADR-008 | Rule Distribution | Kafka-based rule refresh over Redis cache TTL | Sprint 3 | 📝 Proposed |
+| ADR-001 | API Framework | FastAPI over Django REST Framework | Pre-development | ✅ Accepted |
+| ADR-002 | Event Log Storage | Cassandra over PostgreSQL for audit log | Pre-development | ✅ Accepted |
+| ADR-003 | Encryption Key Management | AWS KMS envelope encryption over self-managed keys | Pre-development | ✅ Accepted |
+| ADR-004 | ML Serving Framework | BentoML over TorchServe / Seldon | Pre-development | ✅ Accepted |
+| ADR-005 | Graph Store | Neo4j for entity graph (async only, not hot path) | Pre-development | ✅ Accepted |
+| ADR-006 | Velocity Counter Implementation | Redis sorted-set sliding window over Kafka Streams | Pre-development | ✅ Accepted |
+| ADR-007 | Service Mesh | Istio mTLS over manual certificate management | Pre-development | ✅ Accepted |
+| ADR-008 | Rule Distribution | Kafka-based rule refresh over Redis cache TTL | Pre-development | ✅ Accepted |
 
 ### ADR-002: Cassandra over PostgreSQL for Event Log (Summary)
 
@@ -421,19 +421,19 @@ All ADRs are stored in `docs/architecture/adr/`. The following decisions govern 
 
 The scoring API SLA is P95 < 100ms. Every pipeline stage has an allocated latency budget:
 
-| Stage | Budget | Actual (P50) | Headroom |
+| Stage | Budget | Target (P50) | Notes |
 |---|---|---|---|
-| Validation + Idempotency | 1ms | 0.4ms | ✅ |
-| Enrichment | 10ms | 7ms | ✅ |
-| Feature Extraction (Feast) | 5ms | 4ms | ✅ |
-| Rule Engine | 2ms | 1ms | ✅ |
-| ML Inference (BentoML) | 25ms | 16ms | ✅ |
-| Decision Assembly | 1ms | 0.5ms | ✅ |
-| Network + Serialization | 8ms | 6ms | ✅ |
-| **Total P50** | **52ms** | **35ms** | ✅ |
-| **Total P95 target** | **100ms** | **88ms** | ✅ 12ms headroom |
+| Validation + Idempotency | 1ms | < 1ms | — |
+| Enrichment | 10ms | < 10ms | — |
+| Feature Extraction (Feast) | 5ms | < 5ms | — |
+| Rule Engine | 2ms | < 2ms | — |
+| ML Inference (BentoML) | 25ms | < 25ms | ISS-001 open: cold-start > 300ms |
+| Decision Assembly | 1ms | < 1ms | — |
+| Network + Serialization | 8ms | < 8ms | — |
+| **Total P50** | **52ms** | **< 35ms (target)** | — |
+| **Total P95 target** | **100ms** | **< 100ms (SLA)** | — |
 
-**Budget allocation principle (@marcus):** The ML inference stage owns the largest budget (25ms) because it is the highest-value stage and the hardest to optimise. Network overhead (8ms) is fixed. All other stages must stay within their budgets to protect the ML allocation. ISS-001 (BentoML cold-start) was resolved by pod warmup — inference now starts within budget from first request.
+**Budget allocation principle (@marcus):** The ML inference stage owns the largest budget (25ms) because it is the highest-value stage and the hardest to optimise. Network overhead (8ms) is fixed. All other stages must stay within their budgets to protect the ML allocation. ISS-001 (BentoML cold-start > 300ms) is open — readiness probe configuration required before production.
 
 ---
 

@@ -4,16 +4,16 @@
 ```yaml
 document:           docs/ml/model_card.md
 model_id:           xgb-fraud-scorer
-version:            v3.2.1 (champion) · v3.3.0-rc (challenger — shadow mode)
+version:            ⏳ Not yet trained
 owner:              Dr. Yuki Tanaka (@yuki) — Lead ML / Risk Scientist
 reviewers:          "@james (regulatory) · @priya (PII) · @aisha (PRR) · @marcus (pipeline)"
 framework:          XGBoost 2.0
 serving:            BentoML 1.3 (adaptive batching)
-registry:           MLflow — Production stage
-last_trained:       2024-02-28
-last_evaluated:     2024-03-01
-training_data:      2023-01-01 → 2024-01-31 (13 months)
-status:             Production Champion
+registry:           MLflow — Not yet registered
+last_trained:       N/A — not yet trained
+last_evaluated:     N/A — not yet trained
+training_data:      Not yet collected
+status:             ⏳ Not yet trained
 classification:     Internal — Confidential — Model Governance
 regulatory_scope:   FCRA Section 615 · ECOA / Reg B · SR 11-7 · GDPR Article 22
 ```
@@ -45,7 +45,7 @@ This model is a **regulated model** under:
 | **Calibration** | Platt scaling (isotonic regression validated equivalent) |
 | **Ensemble Role** | Primary scorer (60% weight in ensemble) |
 | **Decision Thresholds** | APPROVE < 200 · CHALLENGE 200–600 · DECLINE > 600 |
-| **Latency (P95)** | 22ms (BentoML adaptive batch, batch window 1ms) |
+| **Latency (P95)** | < 25ms (target) |
 | **Model Size** | 18.4 MB (serialized) |
 | **Git Commit** | `a3f7c2d` |
 | **Training Dataset Hash** | `sha256:9b8e1f...` |
@@ -82,26 +82,26 @@ The following uses are **explicitly prohibited** without a separate model valida
 
 ### 3.1 Holdout Evaluation (Test Set: 2024-02-01 → 2024-02-28)
 
-| Metric | Value | Notes |
+| Metric | Target | Notes |
 |---|---|---|
-| **AUC-PR** | **0.847** | Primary metric. Holdout test set, temporal split. |
-| **AUC-ROC** | 0.961 | Reported for completeness — not decision metric |
-| **KS Statistic** | 0.71 | Maximum separation between fraud/legit score distributions |
-| **Brier Score** | 0.0009 | Calibration quality (lower = better) |
-| **Log Loss** | 0.0041 | — |
+| **AUC-PR** | **> 0.80 (target)** | Primary metric. Holdout test set, temporal split. |
+| **AUC-ROC** | > 0.92 (target) | Reported for completeness — not decision metric |
+| **KS Statistic** | > 0.65 (target) | Maximum separation between fraud/legit score distributions |
+| **Brier Score** | < 0.002 (target) | Calibration quality (lower = better) |
+| **Log Loss** | < 0.01 (target) | — |
 
 ### 3.2 Operating Threshold Performance
 
 | Threshold | Decision | Precision | Recall | F1 | FPR |
 |---|---|---|---|---|---|
 | Score < 200 | APPROVE | — | — | — | — |
-| Score 200–600 | CHALLENGE | 0.31 | 0.78 | 0.44 | 4.2% |
-| Score > 600 | DECLINE | 0.71 | 0.52 | 0.60 | 1.1% |
-| **Combined** | All | **0.58** | **0.81** | **0.68** | **2.8%** |
+| Score 200–600 | CHALLENGE | target | target | target | target |
+| Score > 600 | DECLINE | target | target | target | target |
+| **Combined** | All | **target** | **target** | **target** | **target** |
 
 **Threshold selection rationale (@yuki):**
 
-> "The decline threshold of 600 was set by a joint review with the CFO and Head of Risk in Sprint 1. The cost matrix: a false positive (declined legitimate transaction) costs approximately $47 in lost revenue and customer churn risk. A false negative (approved fraud) costs approximately $280 in chargebacks and reputational damage. At threshold 600, the model operates at a 6:1 cost ratio that matches the business cost matrix. The challenge threshold of 200 was set conservatively — below 200, the model is highly confident in legitimacy. The 3DS friction of a challenge at 200–600 costs approximately $3 in conversion loss, which is acceptable given the risk profile."
+> "The decline threshold of 600 was set by a joint review with the CFO and Head of Risk in Pre-development. The cost matrix: a false positive (declined legitimate transaction) costs approximately $47 in lost revenue and customer churn risk. A false negative (approved fraud) costs approximately $280 in chargebacks and reputational damage. At threshold 600, the model operates at a 6:1 cost ratio that matches the business cost matrix. The challenge threshold of 200 was set conservatively — below 200, the model is highly confident in legitimacy. The 3DS friction of a challenge at 200–600 costs approximately $3 in conversion loss, which is acceptable given the risk profile."
 
 ### 3.3 Calibration
 
@@ -126,15 +126,15 @@ Maximum calibration error (MCE): 0.013  ✅ within acceptable range
 
 ### 3.4 Champion vs. Challenger Comparison
 
-| Metric | Champion v3.2.1 | Challenger v3.3.0-rc | Delta |
+| Metric | Champion | Challenger | Delta |
 |---|---|---|---|
-| AUC-PR | 0.847 | 0.861 | +0.014 ✅ |
-| KS Statistic | 0.71 | 0.73 | +0.02 ✅ |
-| False Positive Rate | 2.8% | 2.4% | -0.4% ✅ |
-| False Negative Rate | 19% | 17% | -2% ✅ |
-| P95 Inference Latency | 22ms | 24ms | +2ms ⚠️ |
-| Model Size | 18.4 MB | 21.2 MB | +2.8 MB |
-| Shadow Mode Status | — | 36h (target: 48h) | ⏳ |
+| AUC-PR | ⏳ Not yet trained | ⏳ Not yet trained | — |
+| KS Statistic | ⏳ Not yet trained | ⏳ Not yet trained | — |
+| False Positive Rate | ⏳ Not yet trained | ⏳ Not yet trained | — |
+| False Negative Rate | ⏳ Not yet trained | ⏳ Not yet trained | — |
+| P95 Inference Latency | < 25ms (target) | < 25ms (target) | — |
+| Model Size | — | — | — |
+| Shadow Mode Status | — | ⏳ Not yet run | — |
 
 > *@yuki:* "v3.3.0-rc is materially better on AUC-PR and false positive rate. The +2ms P95 latency increase is within the stage budget (25ms allocated). I will promote once shadow mode reaches 48 hours and fairness audit clears. Promotion blocked until @aisha PRR sign-off and @james SHAP reason code review."
 
@@ -351,7 +351,7 @@ Transaction Features (47 dimensions)
 
 > *@james:* "ECOA and Regulation B prohibit credit decisions that have a disparate impact on protected classes without a business necessity justification. Because RAS decline decisions affect access to services, we are required to evaluate the model for disparate impact before every promotion to production."
 
-### 7.1 Disparate Impact Analysis (v3.2.1 — Test Set)
+### 7.1 Disparate Impact Analysis (Not yet evaluated — pre-development)
 
 **Methodology:** Protected class proxies are constructed from ZIP code (Bayesian Improved Surname Geocoding — BISG for race/ethnicity proxy) and first name (gender proxy). These proxies are used exclusively for post-hoc audit — they are **never** model features.
 
@@ -359,13 +359,13 @@ Transaction Features (47 dimensions)
 
 | Protected Class | Group | Decline Rate | DIR vs. Reference | Status |
 |---|---|---|---|---|
-| Race/Ethnicity | White (reference) | 1.8% | 1.00 | ✅ |
-| Race/Ethnicity | Black / African American | 2.1% | 0.86 | ✅ (above 0.80) |
-| Race/Ethnicity | Hispanic / Latino | 2.3% | 0.78 | ⚠️ Review required |
-| Race/Ethnicity | Asian | 1.6% | 1.13 | ✅ |
-| Gender | Male (reference) | 1.9% | 1.00 | ✅ |
-| Gender | Female | 1.7% | 1.12 | ✅ |
-| Account Tenure | < 30 days | 8.4% | — | Higher risk — not a protected class |
+| Race/Ethnicity | White (reference) | ⏳ target | target | ⏳ Planned |
+| Race/Ethnicity | Black / African American | ⏳ target | target ≥ 0.80 | ⏳ Planned |
+| Race/Ethnicity | Hispanic / Latino | ⏳ target | target ≥ 0.80 | ⏳ Planned |
+| Race/Ethnicity | Asian | ⏳ target | target | ⏳ Planned |
+| Gender | Male (reference) | ⏳ target | target | ⏳ Planned |
+| Gender | Female | ⏳ target | target | ⏳ Planned |
+| Account Tenure | < 30 days | ⏳ target | — | Higher risk — not a protected class |
 
 **Hispanic / Latino DIR = 0.78 — Review Finding (@james):**
 
@@ -431,12 +431,12 @@ PSI measures the shift between training feature distributions and current produc
 
 | Feature | PSI (last 30 days) | Status |
 |---|---|---|
-| `txn_count_60s` | 0.04 | ✅ Stable |
-| `amount_vs_avg_ratio` | 0.07 | ✅ Stable |
-| `device_first_seen` | 0.11 | ✅ Stable |
-| `ip_proxy_score` | 0.14 | ✅ Stable (monitoring) |
-| `merchant_fraud_rate_30d` | 0.08 | ✅ Stable |
-| `linked_fraud_ring_score` | 0.06 | ✅ Stable |
+| `txn_count_60s` | ⏳ Not yet measured | ⏳ Planned |
+| `amount_vs_avg_ratio` | ⏳ Not yet measured | ⏳ Planned |
+| `device_first_seen` | ⏳ Not yet measured | ⏳ Planned |
+| `ip_proxy_score` | ⏳ Not yet measured | ⏳ Planned |
+| `merchant_fraud_rate_30d` | ⏳ Not yet measured | ⏳ Planned |
+| `linked_fraud_ring_score` | ⏳ Not yet measured | ⏳ Planned |
 
 > *@yuki:* "`ip_proxy_score` PSI at 0.14 is elevated — the distribution is shifting toward higher proxy scores in production vs. training. This is consistent with increased consumer VPN adoption trends. It is not yet at the 0.20 alert threshold, but I am watching it. If it crosses 0.20, I will add more recent VPN-usage data to the next training run. v3.3.0-rc was trained on 2023-03-01 → 2024-02-28, which includes more recent VPN-adoption data — this likely accounts for part of the AUC-PR improvement."
 
@@ -528,18 +528,18 @@ DEPRECATION
 
 ### 10.2 Independent Validation (SR 11-7)
 
-The Federal Reserve's SR 11-7 guidance requires independent model validation — validation by a party not involved in model development. The validation report for v3.2.1 was completed by the Risk Modelling Validation Team (independent of @yuki's team) on 2024-02-20.
+The Federal Reserve's SR 11-7 guidance requires independent model validation — validation by a party not involved in model development. The validation report has not yet been completed — model has not yet been trained.
 
 **Validation findings:**
 
 | Finding | Severity | Status |
 |---|---|---|
-| Training-serving feature parity confirmed (Feast) | ✅ No issue | Closed |
-| Temporal split correctly implemented | ✅ No issue | Closed |
-| DART booster parameters within reasonable range | ✅ No issue | Closed |
-| Reject inference not implemented | ⚠️ Medium | Open — Q3 roadmap |
-| Fairness audit methodology documented | ✅ No issue | Closed |
-| Hispanic/Latino DIR requires monitoring | ⚠️ Medium | Open — quarterly monitoring |
+| Training-serving feature parity confirmed (Feast) | ⏳ Planned | ⏳ Planned |
+| Temporal split correctly implemented | ⏳ Planned | ⏳ Planned |
+| DART booster parameters within reasonable range | ⏳ Planned | ⏳ Planned |
+| Reject inference not implemented | ⏳ Planned | ⏳ Planned |
+| Fairness audit methodology documented | ⏳ Planned | ⏳ Planned |
+| Hispanic/Latino DIR requires monitoring | ⏳ Planned | ⏳ Planned |
 
 ### 10.3 Model Versioning Convention
 
@@ -550,8 +550,8 @@ MAJOR: Breaking change — new feature set, new architecture, label redefinition
 MINOR: Significant improvement — new features added, threshold recalibration
 PATCH: Hotfix — hyperparameter adjustment, calibration update, bug fix
 
-Current champion:   v3.2.1
-Current challenger: v3.3.0-rc  (release candidate — not yet promoted)
+Current champion:   ⏳ Not yet trained
+Current challenger: ⏳ Not yet trained
 ```
 
 ---
@@ -587,7 +587,7 @@ Current challenger: v3.3.0-rc  (release candidate — not yet promoted)
 ---
 
 *Document Version: 1.0.0*
-*Model: xgb-fraud-scorer v3.2.1*
+*Model: xgb-fraud-scorer — not yet trained*
 *Owner: Dr. Yuki Tanaka — Lead ML / Risk Scientist*
 *Review Cycle: Per model promotion · Quarterly scheduled*
 *Classification: Internal — Confidential — Model Governance*

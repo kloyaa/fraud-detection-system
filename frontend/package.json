@@ -1,0 +1,83 @@
+{
+  "name": "@ras/frontend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Risk Assessment System — Analyst Dashboard & Admin Interface",
+  "scripts": {
+    "dev": "next dev --port 3000 --hostname 0.0.0.0",
+    "build": "next build",
+    "start": "next start --port 3000",
+    "lint": "next lint && tsc --noEmit",
+    "typecheck": "tsc --noEmit",
+    "generate:types": "openapi-typescript http://localhost:8000/openapi.json -o src/types/generated-api.ts",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build",
+    "test": "jest",
+    "test:e2e": "playwright test",
+    "test:a11y": "playwright test --grep @a11y"
+  },
+  "dependencies": {
+    "next": "14.2.15",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "next-auth": "5.0.0-beta.25",
+    "@tanstack/react-query": "5.59.20",
+    "@tanstack/react-table": "8.20.5",
+    "zustand": "5.0.0",
+    "react-hook-form": "7.53.1",
+    "@hookform/resolvers": "3.9.1",
+    "zod": "3.23.8",
+    "recharts": "2.13.3",
+    "tailwindcss": "3.4.14",
+    "autoprefixer": "10.4.20",
+    "postcss": "8.4.47",
+    "@radix-ui/react-dialog": "1.1.2",
+    "@radix-ui/react-dropdown-menu": "2.1.2",
+    "@radix-ui/react-tooltip": "1.1.3",
+    "@radix-ui/react-visually-hidden": "1.1.0",
+    "@radix-ui/react-slot": "1.1.0",
+    "@radix-ui/react-separator": "1.1.0",
+    "class-variance-authority": "0.7.0",
+    "clsx": "2.1.1",
+    "tailwind-merge": "2.5.4"
+  },
+  "devDependencies": {
+    "typescript": "5.6.3",
+    "@types/react": "18.3.11",
+    "@types/react-dom": "18.3.1",
+    "@types/node": "20.17.1",
+    "eslint": "8.57.1",
+    "eslint-config-next": "14.2.15",
+    "@typescript-eslint/parser": "8.10.0",
+    "@typescript-eslint/eslint-plugin": "8.10.0",
+    "prettier": "3.3.3",
+    "prettier-plugin-tailwindcss": "0.6.8",
+    "openapi-typescript": "7.4.1",
+    "jest": "29.7.0",
+    "@jest/types": "29.6.3",
+    "ts-jest": "29.2.5",
+    "@testing-library/react": "16.0.1",
+    "@testing-library/jest-dom": "6.6.2",
+    "jest-environment-jsdom": "29.7.0",
+    "@playwright/test": "1.48.2",
+    "@axe-core/playwright": "4.10.1",
+    "bundlewatch": "0.4.0"
+  },
+  "packageManager": "pnpm@9.12.3",
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "bundlewatch": {
+    "files": [
+      {
+        "path": ".next/static/chunks/pages/dashboard*.js",
+        "maxSize": "150KB"
+      },
+      {
+        "path": ".next/static/chunks/pages/admin/rules*.js",
+        "maxSize": "300KB"
+      }
+    ]
+  }
+}

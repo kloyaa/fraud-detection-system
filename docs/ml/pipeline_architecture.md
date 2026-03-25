@@ -6,7 +6,7 @@ document:       docs/ml/pipeline_architecture.md
 version:        1.0.0
 owner:          Dr. Yuki Tanaka (@yuki) — Lead ML / Risk Scientist
 reviewers:      "@marcus · @darius · @priya · @sofia · @aisha"
-last_updated:   Sprint 3
+last_updated:   Pre-development
 status:         Approved
 classification: Internal — Confidential — Model Governance
 ```

@@ -4,7 +4,7 @@
 id:         ADR-007
 title:      Internal Service-to-Service Encryption Strategy
 status:     Accepted
-date:       2024-01-16  (Sprint 2)
+date:       2024-01-16  (Pre-development)
 author:     Marcus Chen (@marcus)
 reviewers:  "@priya · @darius"
 deciders:   "@priya · @marcus · @darius"

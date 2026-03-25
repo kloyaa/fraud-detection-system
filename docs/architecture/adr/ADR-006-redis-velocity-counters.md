@@ -4,7 +4,7 @@
 id:         ADR-006
 title:      Real-Time Velocity Counter Implementation
 status:     Accepted
-date:       2024-01-15  (Sprint 2)
+date:       2024-01-15  (Pre-development)
 author:     Marcus Chen (@marcus)
 reviewers:  "@sofia · @darius · @yuki"
 deciders:   "@marcus · @sofia"

@@ -6,11 +6,11 @@ document:           docs/compliance/gdpr_dpia.md
 version:            1.0.0
 owner:              James Whitfield (@james) — Head of Risk & Compliance
 reviewers:          "@priya · @marcus · @sofia · @yuki · @elena"
-legal_review:       External DPO — in progress (Sprint 4)
+legal_review:       External DPO — not yet engaged
 standard:           GDPR Article 35 · ICO DPIA Guidance (2018)
-dpo_consulted:      Yes — @james is CIPP/E certified; external DPO engaged for sign-off
+dpo_consulted:      Yes — @james is CIPP/E certified; external DPO to be engaged for sign-off
 status:             Draft — pending external DPO sign-off (PRR blocker B-003)
-last_updated:       Sprint 4
+last_updated:       Pre-development
 classification:     Internal — RESTRICTED — Legal Privilege
 distribution:       DPO · CISO · Engineering leads · Supervisory authority (if required)
 ```
@@ -285,16 +285,16 @@ GDPR Article 36 requires prior consultation with the supervisory authority (ICO 
 
 | Risk | Pre-Mitigation | Post-Mitigation |
 |---|---|---|
-| R-001 Unfair automated decline | HIGH | ✅ LOW |
-| R-002 Profiling without awareness | HIGH | ✅ LOW |
-| R-003 Data breach | HIGH | ✅ LOW |
-| R-004 Feature leakage — proxies | HIGH | ✅ LOW |
-| R-005 Excessive retention | MEDIUM | ✅ LOW |
-| R-006 Data subject rights failure | HIGH | ⚠️ MEDIUM |
-| R-007 Cross-border transfer | HIGH | ✅ LOW |
-| R-008 SAR confidentiality | MEDIUM | ✅ LOW |
-| R-009 Model drift | HIGH | ✅ LOW |
-| R-010 Insufficient human review | HIGH | ✅ LOW |
+| R-001 Unfair automated decline | HIGH | ⏳ Planned |
+| R-002 Profiling without awareness | HIGH | ⏳ Planned |
+| R-003 Data breach | HIGH | ⏳ Planned |
+| R-004 Feature leakage — proxies | HIGH | ⏳ Planned |
+| R-005 Excessive retention | MEDIUM | ⏳ Planned |
+| R-006 Data subject rights failure | HIGH | ⏳ Planned |
+| R-007 Cross-border transfer | HIGH | ⏳ Planned |
+| R-008 SAR confidentiality | MEDIUM | ⏳ Planned |
+| R-009 Model drift | HIGH | ⏳ Planned |
+| R-010 Insufficient human review | HIGH | ⏳ Planned |
 
 **Overall residual risk: MEDIUM** (driven by R-006 — DSAR automation gap)
 
@@ -385,11 +385,11 @@ SLA:        30 days
 
 | Stakeholder | Role | Input | Date |
 |---|---|---|---|
-| James Whitfield | CIPP/E, Head of Compliance | DPIA author and primary reviewer | Sprint 4 |
-| Priya Nair | Principal Security Engineer | Security controls review — §4.2 | Sprint 4 |
-| Marcus Chen | Chief Risk Architect | Data flow diagram review — §2.4 | Sprint 4 |
-| Dr. Yuki Tanaka | Lead ML Scientist | Feature catalog and model fairness — §4.2 R-004 | Sprint 4 |
-| Sofia Martínez | Senior Backend Engineer | Erasure implementation — §6.2 | Sprint 4 |
+| James Whitfield | CIPP/E, Head of Compliance | DPIA author and primary reviewer | Pre-development |
+| Priya Nair | Principal Security Engineer | Security controls review — §4.2 | Pre-development |
+| Marcus Chen | Chief Risk Architect | Data flow diagram review — §2.4 | Pre-development |
+| Dr. Yuki Tanaka | Lead ML Scientist | Feature catalog and model fairness — §4.2 R-004 | Pre-development |
+| Sofia Martínez | Senior Backend Engineer | Erasure implementation — §6.2 | Pre-development |
 | External DPO | Qualified DPO (external) | Full DPIA review and sign-off | **Pending** |
 | ICO Prior Consultation | UK Supervisory Authority | Not required — residual risk MEDIUM | N/A |
 
@@ -403,7 +403,7 @@ DPIA Status:    DRAFT — pending external DPO sign-off
 PRR Blocker:    B-003 — DPIA must be signed before production processing
                 commences (GDPR Article 35(1))
 
-Estimated sign-off date: Sprint 4 completion
+Estimated sign-off date: Pre-development
 
 Upon sign-off, this document will be updated to:
   status: Approved

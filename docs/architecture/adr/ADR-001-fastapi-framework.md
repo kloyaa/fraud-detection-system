@@ -4,7 +4,7 @@
 id:         ADR-001
 title:      API Framework Selection
 status:     Accepted
-date:       2024-01-08  (Sprint 1)
+date:       2024-01-08  (Pre-development)
 author:     Marcus Chen (@marcus)
 reviewers:  "@sofia · @darius · @priya"
 deciders:   "@marcus · @sofia"
