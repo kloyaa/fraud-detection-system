@@ -13,7 +13,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authorizeRoute, fetchBackend } from "@/lib/bff";
 
-export async function GET(request: NextRequest): Promise<NextResponse> {
+export async function GET(): Promise<NextResponse> {
   // Verify auth + scope
   const { session, error } = await authorizeRoute("cases:read");
   if (error) return error;
@@ -26,12 +26,12 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
     if (!response.ok) {
       return NextResponse.json(
-        { error_code: "BACKEND_ERROR", message: `Backend returned ${response.status}` },
+        { error_code: "BACKEND_ERROR", message: `Backend returned ${String(response.status)}` },
         { status: response.status }
       );
     }
 
-    const data = await response.json();
+    const data: unknown = await response.json();
     return NextResponse.json(data);
   } catch (error) {
     console.error("Proxy error:", error);
@@ -51,7 +51,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   if (error) return error;
 
   try {
-    const body = await request.json();
+    const body: unknown = await request.json();
     const response = await fetchBackend("/v1/cases", session, {
       method: "POST",
       body: JSON.stringify(body),
@@ -59,12 +59,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     if (!response.ok) {
       return NextResponse.json(
-        { error_code: "BACKEND_ERROR", message: `Backend returned ${response.status}` },
+        { error_code: "BACKEND_ERROR", message: `Backend returned ${String(response.status)}` },
         { status: response.status }
       );
     }
 
-    const data = await response.json();
+    const data: unknown = await response.json();
     return NextResponse.json(data, { status: 201 });
   } catch (error) {
     console.error("Proxy error:", error);

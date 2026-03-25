@@ -13,15 +13,8 @@
  */
 
 import { auth } from "@/lib/auth";
-import { Session } from "next-auth";
-
-export type Session = Session & {
-  user: {
-    id: string;
-    email: string;
-    scopes?: string[];
-  };
-};
+import type { Session } from "next-auth";
+import { NextResponse } from "next/server";
 
 /**
  * Check if a session has a required scope.
@@ -33,7 +26,7 @@ export type Session = Session & {
  */
 export function hasScope(session: Session | null, requiredScope: string): boolean {
   if (!session?.user) return false;
-  const scopes = (session.user as { scopes?: string[] }).scopes ?? [];
+  const scopes = session.user.scopes ?? [];
   return scopes.includes(requiredScope);
 }
 
@@ -53,7 +46,7 @@ export function getAuthorizationHeader(session: Session | null): string | null {
   // In a real scenario, we'd need to extract it from the cookie/token
   // For now, return a placeholder that the backend can validate
   // In production, NextAuth exposes the raw token via the session object
-  return `Bearer ${(session as any).accessToken ?? ""}`;
+  return `Bearer ${session.accessToken ?? ""}`;
 }
 
 /**
@@ -80,8 +73,13 @@ export async function fetchBackend(
 
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
-    ...options.headers,
   };
+
+  // Merge caller-provided headers if they are a plain object (not Headers or string[][]).
+  // Route Handlers always pass Record<string, string> or nothing.
+  if (options.headers && typeof options.headers === "object" && !Array.isArray(options.headers)) {
+    Object.assign(headers, options.headers as Record<string, string>);
+  }
 
   if (authHeader) {
     headers["Authorization"] = authHeader;
@@ -111,7 +109,7 @@ export async function authorizeRoute(
   requiredScope: string
 ): Promise<{
   session: Session | null;
-  error: Response | null;
+  error: NextResponse | null;
 }> {
   const session = await auth();
 
@@ -119,12 +117,12 @@ export async function authorizeRoute(
   if (!session?.user) {
     return {
       session: null,
-      error: new Response(
-        JSON.stringify({
+      error: NextResponse.json(
+        {
           error_code: "UNAUTHORIZED",
           message: "Authentication required",
-        }),
-        { status: 401, headers: { "Content-Type": "application/json" } }
+        },
+        { status: 401 }
       ),
     };
   }
@@ -133,12 +131,12 @@ export async function authorizeRoute(
   if (!hasScope(session, requiredScope)) {
     return {
       session,
-      error: new Response(
-        JSON.stringify({
+      error: NextResponse.json(
+        {
           error_code: "FORBIDDEN",
           message: `Scope '${requiredScope}' required`,
-        }),
-        { status: 403, headers: { "Content-Type": "application/json" } }
+        },
+        { status: 403 }
       ),
     };
   }

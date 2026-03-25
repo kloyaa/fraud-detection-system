@@ -145,6 +145,7 @@ export const authConfig: NextAuthConfig = {
      */
     async jwt({ token, user, account }) {
       // First-time sign-in: extract user info and scopes from account
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
       if (user && account) {
         token.id = user.id;
         token.email = user.email;
@@ -167,7 +168,7 @@ export const authConfig: NextAuthConfig = {
       // Token expired — attempt refresh
       try {
         const response = await fetch(
-          `${process.env["KEYCLOAK_ISSUER"]}/protocol/openid-connect/token`,
+          `${String(process.env["KEYCLOAK_ISSUER"])}/protocol/openid-connect/token`,
           {
             method: "POST",
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -182,16 +183,25 @@ export const authConfig: NextAuthConfig = {
 
         if (!response.ok) {
           // Refresh failed — force re-auth
-          throw new Error(`Refresh token request failed: ${response.status}`);
+          throw new Error(`Refresh token request failed: ${String(response.status)}`);
         }
 
-        const refreshed = await response.json();
+        const refreshed: unknown = await response.json();
+        // Minimal shape validation for the OIDC token response.
+        // A full Zod schema is overkill here since Keycloak controls the format,
+        // but we guard against `any` leaking through.
+        const parsed = refreshed as {
+          access_token?: string;
+          refresh_token?: string;
+          expires_in?: number;
+          scope?: string;
+        };
         return {
           ...token,
-          accessToken: refreshed.access_token,
-          refreshToken: refreshed.refresh_token ?? token.refreshToken,
-          expiresAt: Date.now() + refreshed.expires_in * 1000,
-          scopes: (refreshed.scope as string)?.split(" ") ?? token.scopes,
+          accessToken: parsed.access_token ?? token.accessToken,
+          refreshToken: parsed.refresh_token ?? token.refreshToken,
+          expiresAt: Date.now() + (parsed.expires_in ?? 0) * 1000,
+          scopes: parsed.scope?.split(" ") ?? token.scopes,
         };
       } catch (error) {
         console.error("Token refresh failed:", error);
@@ -214,10 +224,12 @@ export const authConfig: NextAuthConfig = {
         return session; // NextAuth will treat this as failed and sign out
       }
 
-      session.user.id = token.id as string;
-      session.user.email = token.email as string;
-      // Expose scopes for frontend RBAC rendering
-      (session.user as { scopes?: string[] }).scopes = token.scopes as string[];
+      session.user.id = token.id ?? "";
+      session.user.email = token.email ?? "";
+      // Expose scopes for frontend RBAC rendering (augmented in next-auth.d.ts)
+      session.user.scopes = token.scopes ?? [];
+      // Expose access token for BFF proxy (server-side only, never sent to browser)
+      session.accessToken = token.accessToken;
 
       return session;
     },

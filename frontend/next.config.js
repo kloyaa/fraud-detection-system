@@ -44,7 +44,7 @@ const nextConfig = {
      * Static security headers — coordinated with @priya.
      *
      * Content-Security-Policy is NOT set here. It is set dynamically in
-     * src/middleware.ts with a per-request nonce so that Next.js inline
+     * middleware.ts (project root) with a per-request nonce so that Next.js inline
      * hydration scripts satisfy `script-src 'self' 'nonce-...'` without
      * requiring `'unsafe-inline'`.
      *
