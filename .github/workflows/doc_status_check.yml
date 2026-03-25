@@ -1,0 +1,56 @@
+name: Documentation Status Check
+
+on:
+  push:
+    branches: [master, main, "feature/**"]
+  pull_request:
+    branches: [master, main]
+
+jobs:
+  doc-status:
+    name: Sprint docs — completeness check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check sprint docs exist and are non-empty
+        shell: bash
+        run: |
+          set -euo pipefail
+          SPRINT_DIR="docs/guides/sprints"
+          FAIL=0
+
+          if [ ! -d "$SPRINT_DIR" ]; then
+            echo "ERROR: $SPRINT_DIR directory not found" >&2
+            exit 1
+          fi
+
+          for doc in "$SPRINT_DIR"/*.md; do
+            [ -f "$doc" ] || continue
+
+            # Fail on empty files
+            if [ ! -s "$doc" ]; then
+              echo "ERROR: $doc is empty" >&2
+              FAIL=1
+              continue
+            fi
+
+            # Warn (but don't fail) on sprints that haven't started
+            if grep -q "Status: ⏳ Not started" "$doc"; then
+              echo "WARN: $doc has Status: Not started" >&2
+            fi
+
+            # Fail if Status line is completely missing (doc is likely a stub)
+            if ! grep -q "^\*\*Status:" "$doc"; then
+              echo "ERROR: $doc is missing **Status:** line" >&2
+              FAIL=1
+            fi
+          done
+
+          if [ "$FAIL" -eq 1 ]; then
+            echo ""
+            echo "Documentation check failed. Fix the errors above."
+            exit 1
+          fi
+
+          echo "All sprint docs passed documentation check."

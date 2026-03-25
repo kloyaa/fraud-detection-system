@@ -61,7 +61,13 @@
     "jest-environment-jsdom": "29.7.0",
     "@playwright/test": "1.48.2",
     "@axe-core/playwright": "4.10.1",
-    "bundlewatch": "0.4.0"
+    "bundlewatch": "0.4.0",
+    "storybook": "8.3.6",
+    "@storybook/nextjs": "8.3.6",
+    "@storybook/react": "8.3.6",
+    "@storybook/addon-essentials": "8.3.6",
+    "@storybook/addon-a11y": "8.3.6",
+    "@storybook/addon-interactions": "8.3.6"
   },
   "packageManager": "pnpm@9.12.3",
   "engines": {

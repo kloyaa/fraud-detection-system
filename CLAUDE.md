@@ -252,24 +252,24 @@ All ADRs are documented in [docs/architecture/adr/](docs/architecture/adr/) with
 
 ---
 
-## Sprint 0 — Pre-Development
+## Sprints
+If sprint is completed, tag it as [COMPLETED]
 
-- [ ] Rule Engine v1 — 10 production rules
-- [ ] Feast feature store (online + offline)
-- [ ] PostgreSQL schema migrations complete
-- [ ] BentoML inference server wired to scoring API
-- [ ] Prometheus + Grafana dashboards live
-- [ ] Integration test suite — target 85% coverage
+- [COMPLETED] 0. Infrastructure & DevOps Foundation
+- [COMPLETED] 1. Backend Core
+- [COMPLETED] 2. Security Layer + Auth
+- [ ] 3. Rule Engine + Case Management
+- [ ] 4. ML Pipeline + Feature Store
 
 ## Open Issues
 
-| ID | Issue | Owner | Priority |
-|---|---|---|---|
-| ISS-001 | ML model cold-start latency > 300ms | `@yuki` | P1 |
-| ISS-002 | PgBouncer pool exhaustion under load | `@sofia` | P1 |
-| ISS-003 | Vault secret rotation not wired to app reload | `@priya` | P2 |
-| ISS-004 | Neo4j 3-hop traversal timeout | `@marcus` | P2 |
-| ISS-005 | Missing runbook: Cassandra node failure | `@darius` | P2 |
+| ID | Issue | Owner | Priority | Status |
+|---|---|---|---|---|
+| ISS-001 | ML model cold-start latency > 300ms | `@yuki` | P1 | Open |
+| ISS-002 | PgBouncer pool exhaustion under load | `@sofia` | P1 | Open |
+| ISS-003 | Vault secret rotation not wired to app reload | `@priya` | P2 | ✅ RESOLVED |
+| ISS-004 | Neo4j 3-hop traversal timeout | `@marcus` | P2 | Open |
+| ISS-005 | Missing runbook: Cassandra node failure | `@darius` | P2 | Open |
 
 ---
 

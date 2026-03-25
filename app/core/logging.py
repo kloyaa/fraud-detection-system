@@ -2,6 +2,9 @@
 
 All logs are emitted as JSON to stdout for production. Never use print() or
 logging.info() — use the configured logger instead.
+
+Per PCI DSS Requirement 3.3.1: Sensitive data (PAN, CVV, SSN) is masked
+before logs are written via the mask_processor.
 """
 
 import logging
@@ -12,6 +15,7 @@ import structlog
 from structlog.types import FilteringBoundLogger
 
 from app.config import settings
+from app.core.log_masking import mask_processor
 
 
 def setup_logging() -> None:
@@ -30,6 +34,7 @@ def setup_logging() -> None:
         structlog.processors.StackInfoRenderer(),
         structlog.processors.format_exc_info,
         structlog.processors.UnicodeDecoder(),
+        mask_processor,  # PCI DSS Req 3.3.1: Mask PAN, CVV, SSN before serialization
     ]
 
     if settings.environment == "production":

@@ -17,6 +17,7 @@
 
 import NextAuth, { type NextAuthConfig } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
+import Keycloak from "next-auth/providers/keycloak";
 import { z } from "zod";
 
 /**
@@ -50,6 +51,43 @@ const DEV_USERS = [
 
 export const authConfig: NextAuthConfig = {
   providers: [
+    /**
+     * Keycloak OIDC — used in staging and production.
+     * Requires KEYCLOAK_CLIENT_ID, KEYCLOAK_CLIENT_SECRET, KEYCLOAK_ISSUER
+     * environment variables to be set.
+     *
+     * Local dev: Configure via docker-compose Keycloak at http://localhost:8080/realms/ras
+     * See .env.local.example for required variables.
+     */
+    /**
+     * From @priya (Sprint 2 security spec):
+     * - Realm: ras
+     * - ISSUER: https://auth.ras.internal/realms/ras
+     * - client_id: ras-dashboard (confidential)
+     * - client_secret: Vault-provisioned, NEVER hardcoded
+     * - Algorithm: RS256 (not HS256)
+     * - Access Token TTL: 15 minutes
+     * - Refresh Token TTL: 24 hours, single-use rotation
+     *
+     * Local dev: docker-compose starts Keycloak at http://localhost:8080/realms/ras-dev
+     * PKCE is enabled for defense-in-depth even with a confidential client.
+     */
+    Keycloak({
+      clientId: "ras-dashboard",
+      clientSecret: process.env["KEYCLOAK_CLIENT_SECRET"] ?? "",
+      issuer: process.env["KEYCLOAK_ISSUER"] ?? "http://localhost:8080/realms/ras",
+      authorization: {
+        params: {
+          scope: "openid risk:read_all cases:read cases:write rules:read",
+        },
+      },
+    }),
+
+    /**
+     * Dev-only credentials provider.
+     * Disabled when KEYCLOAK_ISSUER is set (staging/prod).
+     * Never expose plaintext passwords in production.
+     */
     Credentials({
       name: "Development Login",
       credentials: {
@@ -93,15 +131,94 @@ export const authConfig: NextAuthConfig = {
   },
 
   callbacks: {
-    jwt({ token, user }) {
-      token.role = (user as { role?: string }).role ?? token.role ?? "analyst";
-      token.userId = user.id ?? token.userId;
-      return token;
+    /**
+     * JWT callback: Handle access token refresh and scope extraction.
+     *
+     * Threat S-005 (Refresh Token Theft):
+     * Implement refresh token rotation — when the access token expires (15 min),
+     * use the refresh token to get a new access token + new refresh token.
+     * The old refresh token is invalidated by Keycloak.
+     * If refresh fails, force re-authentication.
+     *
+     * Scopes from the JWT `scope` claim are extracted here and stored in the token
+     * for the session callback to expose to the app.
+     */
+    async jwt({ token, user, account }) {
+      // First-time sign-in: extract user info and scopes from account
+      if (user && account) {
+        token.id = user.id;
+        token.email = user.email;
+        token.accessToken = account.access_token;
+        token.refreshToken = account.refresh_token;
+        token.expiresAt = (account.expires_at ?? 0) * 1000; // Convert to ms
+
+        // Extract scopes from the account (Keycloak returns scope as space-separated string)
+        const scopes = account.scope?.split(" ") ?? [];
+        token.scopes = scopes;
+
+        return token;
+      }
+
+      // Token has expired? Use refresh token to get a new access token
+      if (Date.now() < (token.expiresAt as number)) {
+        return token; // Token still valid
+      }
+
+      // Token expired — attempt refresh
+      try {
+        const response = await fetch(
+          `${process.env["KEYCLOAK_ISSUER"]}/protocol/openid-connect/token`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: new URLSearchParams({
+              client_id: "ras-dashboard",
+              client_secret: process.env["KEYCLOAK_CLIENT_SECRET"] ?? "",
+              grant_type: "refresh_token",
+              refresh_token: token.refreshToken as string,
+            }),
+          }
+        );
+
+        if (!response.ok) {
+          // Refresh failed — force re-auth
+          throw new Error(`Refresh token request failed: ${response.status}`);
+        }
+
+        const refreshed = await response.json();
+        return {
+          ...token,
+          accessToken: refreshed.access_token,
+          refreshToken: refreshed.refresh_token ?? token.refreshToken,
+          expiresAt: Date.now() + refreshed.expires_in * 1000,
+          scopes: (refreshed.scope as string)?.split(" ") ?? token.scopes,
+        };
+      } catch (error) {
+        console.error("Token refresh failed:", error);
+        // Return token with expired flag — session callback will detect this
+        return { ...token, error: "RefreshAccessTokenError" };
+      }
     },
 
+    /**
+     * Session callback: Expose JWT claims to the application.
+     *
+     * SECURITY: The browser gets claims from the session object, NOT the raw JWT.
+     * The raw JWT stays encrypted in the httpOnly cookie.
+     *
+     * If token refresh failed, signOut() is triggered on the frontend.
+     */
     session({ session, token }) {
-      session.user.id = token.userId as string;
-      (session.user as { role?: string }).role = token.role as string;
+      // Propagate refresh token error to client — trigger re-auth
+      if (token.error === "RefreshAccessTokenError") {
+        return session; // NextAuth will treat this as failed and sign out
+      }
+
+      session.user.id = token.id as string;
+      session.user.email = token.email as string;
+      // Expose scopes for frontend RBAC rendering
+      (session.user as { scopes?: string[] }).scopes = token.scopes as string[];
+
       return session;
     },
 

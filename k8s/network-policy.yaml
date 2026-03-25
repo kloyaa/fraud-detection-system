@@ -1,0 +1,207 @@
+---
+# NetworkPolicy: default-deny ingress for RAS namespace
+# Per @priya: "Kubernetes NetworkPolicy default-deny applied"
+# and per ADR-007: Istio mTLS in STRICT mode
+#
+# Pattern: Block all ingress by default, then explicitly allow:
+# 1. Istio ingress gateway → services
+# 2. Service-to-service (via Istio mTLS)
+# 3. Prometheus scraping for metrics
+# 4. DNS (kube-dns for service discovery)
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: ras-default-deny
+  namespace: ras
+  labels:
+    app.kubernetes.io/name: risk-assessment-system
+    app.kubernetes.io/version: "1.0.0"
+spec:
+  podSelector: {}  # Apply to all pods in namespace
+  policyTypes:
+    - Ingress
+    - Egress
+
+---
+# Allow ingress from Istio ingress gateway (external traffic)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: ras-allow-from-ingress
+  namespace: ras
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/component: api
+  policyTypes:
+    - Ingress
+  ingress:
+    # From Istio ingress gateway in istio-system namespace
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: istio-system
+          podSelector:
+            matchLabels:
+              app: istio-ingressgateway
+      ports:
+        - protocol: TCP
+          port: 8000  # FastAPI server port
+
+---
+# Allow service-to-service communication (internal only)
+# mTLS is enforced by Istio; NetworkPolicy provides defense in depth
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: ras-allow-internal
+  namespace: ras
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+  ingress:
+    # From other pods in the same namespace
+    - from:
+        - podSelector: {}
+      ports:
+        - protocol: TCP
+          port: 8000
+        - protocol: TCP
+          port: 8001  # Metrics port
+        - protocol: TCP
+          port: 6379  # Redis
+        - protocol: TCP
+          port: 5432  # PostgreSQL
+        - protocol: TCP
+          port: 9042  # Cassandra
+        - protocol: TCP
+          port: 9093  # Kafka
+
+---
+# Allow Prometheus scraping metrics
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: ras-allow-prometheus
+  namespace: ras
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+  ingress:
+    # From Prometheus in monitoring namespace
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: monitoring
+          podSelector:
+            matchLabels:
+              app: prometheus
+      ports:
+        - protocol: TCP
+          port: 8001  # Metrics scrape port
+
+---
+# Allow DNS queries (required for service discovery)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: ras-allow-dns
+  namespace: ras
+spec:
+  podSelector: {}
+  policyTypes:
+    - Egress
+  egress:
+    # DNS to kube-dns in kube-system
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+
+---
+# Allow egress to external APIs (e.g., Keycloak, KMS)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: ras-allow-external-apis
+  namespace: ras
+spec:
+  podSelector: {}
+  policyTypes:
+    - Egress
+  egress:
+    # HTTPS to external services (Keycloak, AWS KMS, etc.)
+    - to:
+        - namespaceSelector: {}
+      ports:
+        - protocol: TCP
+          port: 443  # HTTPS
+
+---
+# Istio PeerAuthentication: mTLS STRICT mode
+# All traffic between services MUST use mTLS
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: ras-mtls-strict
+  namespace: ras
+spec:
+  mtls:
+    mode: STRICT  # Reject all traffic that is not mTLS
+  # Per ADR-007: No permissive mode in production
+
+---
+# Istio AuthorizationPolicy: Default deny all
+# Traffic must match explicit allow rules
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: ras-default-deny
+  namespace: ras
+spec:
+  {} # Deny all by default
+
+---
+# Istio AuthorizationPolicy: Allow from ingress gateway to app
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: ras-allow-from-gateway
+  namespace: ras
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: api
+  rules:
+    # Allow from Istio ingress gateway
+    - from:
+        - source:
+            principals:
+              - "cluster.local/ns/istio-system/sa/istio-ingressgateway-service-account"
+      to:
+        - operation:
+            methods: ["GET", "POST", "PATCH", "DELETE", "PUT"]
+            ports: ["8000"]
+
+---
+# Istio AuthorizationPolicy: Allow service-to-service
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: ras-allow-internal-services
+  namespace: ras
+spec:
+  rules:
+    # Any pod in the namespace can call any other pod
+    - from:
+        - source:
+            namespaces: ["ras"]

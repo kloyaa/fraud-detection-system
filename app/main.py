@@ -15,10 +15,13 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
 
+from app.cassandra.client import close_cassandra, init_cassandra
 from app.config import settings
 from app.core.logging import get_logger, setup_logging
+from app.core.redis import close_redis, init_redis
 from app.db.engine import engine
-from app.health.routes import router as health_router
+from app.health.routes import probes_router, router as health_router
+from app.kafka.producer import close_kafka_producer, init_kafka_producer
 from app.middleware.idempotency import IdempotencyMiddleware
 from app.scoring.routes import router as scoring_router
 
@@ -65,7 +68,7 @@ async def lifespan(app: FastAPI):
         openapi_json="http://localhost:8000/openapi.json",
     )
 
-    # Health checks
+    # Database connectivity check
     try:
         async with engine.begin() as conn:
             await conn.exec_driver_sql("SELECT 1")
@@ -74,10 +77,34 @@ async def lifespan(app: FastAPI):
         logger.error("database_connection_failed", error=str(e))
         raise
 
+    # Redis connectivity check
+    try:
+        await init_redis()
+    except Exception as e:
+        logger.error("redis_connection_failed", error=str(e))
+        raise
+
+    # Kafka producer
+    try:
+        await init_kafka_producer()
+    except Exception as e:
+        logger.warning("kafka_producer_init_failed", error=str(e))
+        # Non-fatal: scoring still works, Kafka publish will be skipped
+
+    # Cassandra audit log
+    try:
+        await init_cassandra()
+    except Exception as e:
+        logger.warning("cassandra_init_failed", error=str(e))
+        # Non-fatal: scoring still works, Cassandra writes go to DLQ
+
     yield
 
     # Shutdown
     logger.info("app_shutdown")
+    await close_kafka_producer()
+    await close_cassandra()
+    await close_redis()
     await engine.dispose()
 
 
@@ -116,6 +143,7 @@ def create_app() -> FastAPI:
 
     # Mount routers
     app.include_router(health_router)
+    app.include_router(probes_router)
     app.include_router(scoring_router)
 
     # Root endpoint

@@ -25,11 +25,30 @@ repos:
           - pydantic-settings
         args: [--strict]
 
-  - repo: https://github.com/Lucas-C/pre-commit-hooks-bandit
-    rev: v1.3.1
+  # Bandit — SAST for Python security issues (OWASP Top 10)
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.7.5
     hooks:
-      - id: python-bandit-vulnerability-check
-        args: [--severity-level=medium]
+      - id: bandit
+        args: ["-r", "app/", "-ll", "--skip", "B101"]
+        # -ll = medium+ severity (reject HIGH/CRITICAL)
+        # --skip B101 = skip assert_used (OK in our code)
+
+  # Semgrep — semantic security analysis
+  - repo: https://github.com/returntocorp/semgrep
+    rev: v1.45.0
+    hooks:
+      - id: semgrep
+        args: ["--config=p/security-audit", "--config=p/owasp-top-ten", "--error"]
+        files: ^app/
+        stages: [commit]
+
+  # Detect secrets — prevent API key/credential commits
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.4.0
+    hooks:
+      - id: detect-secrets
+        args: ["--baseline", ".secrets.baseline"]
 
   - repo: local
     hooks:

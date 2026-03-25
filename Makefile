@@ -1,4 +1,4 @@
-.PHONY: help dev test lint typecheck clean install migrate docker-up docker-down docker-logs docker-build docker-prod frontend-dev frontend-build frontend-install frontend-lint frontend-typecheck
+.PHONY: help dev test lint typecheck clean install migrate docker-up docker-up-build docker-down docker-logs docker-build docker-prod frontend-dev frontend-build frontend-install frontend-lint frontend-typecheck
 
 help:
 	@echo "Risk Assessment System (RAS) Backend"
@@ -47,7 +47,16 @@ help:
 docker-up:
 	docker-compose up -d
 	@echo "Stack started. Access app at http://localhost:8000"
+	@echo "View logs: make docker-logs"
+
+docker-up-build:
+	docker-compose down
+	docker-compose up --build -d
+	@echo "Stack rebuilt and started. Access app at http://localhost:8000"
 	@echo "View logs: docker-compose logs -f app"
+
+docker-build-no-cache:
+	docker-compose build --no-cache
 
 docker-down:
 	docker-compose down
@@ -76,6 +85,18 @@ docker-prod:
 
 # Development Commands
 dev:
+	docker-compose up -d
+	@echo ""
+	@echo "Full stack started:"
+	@echo "  Backend API:  http://localhost:8000"
+	@echo "  Swagger UI:   http://localhost:8000/docs"
+	@echo "  Frontend:     http://localhost:3000"
+	@echo "  Keycloak:     http://localhost:8080  (admin/admin)"
+	@echo "  Vault:        http://localhost:8200  (token: dev-root-token)"
+	@echo ""
+	@echo "Logs: make docker-logs"
+
+dev-local:
 	python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
 install:

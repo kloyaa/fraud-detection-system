@@ -41,13 +41,14 @@ const nextConfig = {
     },
 
     /**
-     * Security headers — coordinated with @priya.
+     * Static security headers — coordinated with @priya.
      *
-     * CSP: script-src 'self' with nonce injection (Next.js handles nonce via
-     * the experimental.serverActions config). No 'unsafe-inline', no 'unsafe-eval'.
+     * Content-Security-Policy is NOT set here. It is set dynamically in
+     * src/middleware.ts with a per-request nonce so that Next.js inline
+     * hydration scripts satisfy `script-src 'self' 'nonce-...'` without
+     * requiring `'unsafe-inline'`.
      *
-     * NOTE: In production, the nonce is injected by Next.js middleware.
-     * The static CSP below is the baseline; nonce augmentation happens at runtime.
+     * All other headers are static and safe to set at the config level.
      */
     async headers() {
         return [
@@ -78,20 +79,6 @@ const nextConfig = {
                         key: "Permissions-Policy",
                         value:
                             "camera=(), microphone=(), geolocation=(), interest-cohort=()",
-                    },
-                    {
-                        key: "Content-Security-Policy",
-                        value: [
-                            "default-src 'self'",
-                            "script-src 'self'",
-                            "style-src 'self' 'unsafe-inline'",
-                            "img-src 'self' data: blob:",
-                            "font-src 'self'",
-                            "connect-src 'self'",
-                            "frame-ancestors 'none'",
-                            "base-uri 'self'",
-                            "form-action 'self'",
-                        ].join("; "),
                     },
                 ],
             },

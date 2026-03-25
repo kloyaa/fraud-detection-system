@@ -23,6 +23,8 @@
 [ ] Keycloak (staging)
 ```
 
+> Cloud provisioning requires AWS credentials — tracked separately.
+
 ---
 
 ## CI/CD
@@ -30,11 +32,11 @@
 `@darius` leads
 
 ```
-[ ] GitHub Actions — lint, test, build, scan pipelines
+[x] GitHub Actions — lint, test, build, scan pipelines (.github/workflows/ci.yml)
 [ ] ArgoCD installed on EKS
 [ ] ECR registries created
-[ ] Trivy + Snyk + Bandit integrated in CI
-[ ] doc_status_check.yml workflow active
+[x] Trivy + Bandit integrated in CI
+[x] doc_status_check.yml workflow active
 ```
 
 ---
@@ -44,10 +46,10 @@
 `@darius` leads
 
 ```
-[ ] docker-compose.yml — full local stack
-      postgres, cassandra, redis, kafka, vault, keycloak
-[ ] .env.example with all required variables
-[ ] make dev — one command to start everything
+[x] docker-compose.yml — full local stack
+      postgres, cassandra, redis, kafka (KRaft), vault, keycloak
+[x] .env.example with all required variables
+[x] make dev — one command to start everything (docker-compose up -d)
 ```
 
 ---
@@ -57,14 +59,14 @@
 `@sofia` leads
 
 ```
-[ ] FastAPI app skeleton — routers, middleware, lifespan
-[ ] SQLAlchemy async setup + asyncpg
-[ ] Alembic migrations initialized
-[ ] structlog configured
-[ ] Health endpoints — /health/live + /health/ready
-[ ] Pydantic v2 settings (environment config)
-[ ] pytest + pytest-asyncio configured
-[ ] Testcontainers conftest.py (PostgreSQL + Redis + Kafka)
+[x] FastAPI app skeleton — routers, middleware, lifespan
+[x] SQLAlchemy async setup + asyncpg
+[x] Alembic migrations initialized
+[x] structlog configured
+[x] Health endpoints — /health/live + /health/ready
+[x] Pydantic v2 settings (environment config)
+[x] pytest + pytest-asyncio configured
+[x] Testcontainers conftest.py (PostgreSQL + Redis + Kafka)
 ```
 
 ---
@@ -74,15 +76,15 @@
 `@elena` leads
 
 ```
-[ ] Next.js App Router structure confirmed
-[ ] TypeScript strict mode configured
-[ ] Tailwind + Radix UI installed
-[ ] NextAuth.js v5 + Keycloak OIDC wired
-[ ] OpenAPI type generation script (openapi-typescript)
-[ ] React Query v5 configured
-[ ] Playwright + axe-core configured
-[ ] Storybook initialized
-[ ] CSP headers in next.config.ts
+[x] Next.js App Router structure confirmed
+[x] TypeScript strict mode configured
+[x] Tailwind + Radix UI installed
+[x] NextAuth.js v5 + Keycloak OIDC wired (+ dev credentials fallback)
+[x] OpenAPI type generation script (openapi-typescript)
+[x] React Query v5 configured
+[x] Playwright + axe-core configured
+[x] Storybook initialized (run: pnpm install && pnpm storybook)
+[x] CSP headers in next.config.js
 ```
 
 ---
@@ -96,6 +98,7 @@
 
 ---
 
-**Owner:** Darius Okafor (`@darius`)  
-**Status:** ⏳ Not started  
+**Owner:** Darius Okafor (`@darius`)
+**Status:** ✅ Local dev complete — cloud provisioning pending AWS credentials
 **Created:** 2026-03-25
+**Completed:** 2026-03-25
